@@ -172,7 +172,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         margin:0;
         padding: 5px 4px;
       }
-      #errorToast{
+      .errorToast{
         background-color: #C70000;
       }
       @media all and (min-width: 0) and (max-width: 320px) and (orientation: portrait) {
@@ -361,10 +361,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <span>{{_toastMessage}}</span>
     </paper-toast>
 
-    <paper-toast id="errorToast" duration="4000">
-      <span>{{_toastErrorMessage}}</span>
-    </paper-toast>
-
     <paper-dialog id="modalDialog" modal>
       <div>
         <p>{{_dialogMessage}}</p>
@@ -468,19 +464,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$$('#authProvider').logout();
       },
       _toggleSMS: function() {
-        var _this = this;
         if (this._smsSelected) {
           this._openDialog("Please enter the phone number to register for SMS notifications",this._previouslyRegisteredPhoneNumber || '','_handleRegisterSms');
         }
         else {
           voyent.xio.push.unregisterSms(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm());
           this._smsSelected = false;
-          setTimeout(function(){
-            _this._toastMessage = 'Unregistered from SMS notifications';
-            if (_this.querySelector('#toast')) {
-              _this.querySelector('#toast').show();
-            }
-          },200);
+          this._showInfoToast('Unregistered from SMS notifications');
         }
       },
       _handleRegisterSms: function(cancelled) {
@@ -495,26 +485,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         voyent.xio.push.registerSms(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm(),
                                     voyent.io.auth.getLastKnownUsername(), phonenumber).then(function() {
           _this._smsSelected = true;
-          _this._toastMessage = 'Registered for SMS notifications';
-          if (_this.querySelector('#toast')) {
-            _this.querySelector('#toast').show();
-          }
+          _this._showInfoToast('Registered for SMS notifications');
         });
       },
       _toggleEmail: function() {
-        var _this = this;
         if (this._emailSelected) {
           this._openDialog('Please enter the email to register for mail notifications',this._previouslyRegisteredEmail || '','_handleRegisterEmail');
         }
         else {
           voyent.xio.push.unregisterEmail(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm());
           this._emailSelected = false;
-          setTimeout(function(){
-            _this._toastMessage = 'Unregistered from email notifications';
-            if (_this.querySelector('#toast')) {
-              _this.querySelector('#toast').show();
-            }
-          },200);
+          this._showInfoToast('Unregistered from email notifications');
         }
       },
       _handleRegisterEmail: function(cancelled) {
@@ -529,10 +510,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         voyent.xio.push.registerEmail(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm(),
                                       voyent.io.auth.getLastKnownUsername(), email).then(function() {
           _this._emailSelected = true;
-          _this._toastMessage = 'Registered for email notifications';
-          if (_this.querySelector('#toast')) {
-            _this.querySelector('#toast').show();
-          }
+          _this._showInfoToast('Registered for email notifications');
         });
       },
       _toggleCloud: function() {
@@ -543,12 +521,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         else {
           voyent.xio.push.unregisterCloudPush(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm());
           this._cloudSelected = false;
-          setTimeout(function() {
-            _this._toastMessage = 'Unregistered from device notifications';
-            if (_this.querySelector('#toast')) {
-              _this.querySelector('#toast').show();
-            }
-          },200);
+          this._showInfoToast('Unregistered from device notifications');
         }
       },
       _handleRegisterCloud: function() {
@@ -556,10 +529,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         voyent.xio.push.registerCloudPush(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm(),
                                           voyent.io.auth.getLastKnownUsername()).then(function() {
           _this._cloudSelected = true;
-          _this._toastMessage = 'Registered for device notifications';
-          if (_this.querySelector('#toast')) {
-            _this.querySelector('#toast').show();
-          }
+          _this._showInfoToast('Registered for device notifications');
         });
       },
       _openDialog: function(message,input,func) {
@@ -585,6 +555,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
         else if (e.keyCode === 27) { //Escape
           this._cancelDialog();
+        }
+      },
+
+      _showInfoToast: function(message) {
+        this._toastMessage = message;
+        var toast = this.querySelector('#toast');
+        if (toast) {
+          toast.classList.remove('errorToast');
+          toast.show();
+        }
+      },
+      _showErrorToast: function(message) {
+        this._toastMessage = 'Error: ' + message;
+        var toast = this.querySelector('#toast');
+        if (toast) {
+          toast.classList.add('errorToast');
+          toast.show();
         }
       },
 
@@ -628,10 +615,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         //error handling
         this.addEventListener('message-error', function(e) {
-          _this._toastErrorMessage = 'Error: ' + e.detail;
-          if (_this.querySelector('#errorToast')) {
-            _this.querySelector('#errorToast').show();
-          }
+          _this._showErrorToast(e.detail);
         });
 
         document.addEventListener('voyentNotifyInitialized',function(e) {
