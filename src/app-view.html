@@ -1,0 +1,673 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<!-- Custom Imports Below -->
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-badge/paper-badge.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-xio-import/voyent-xio-import.html">
+<link rel="import" href="../bower_components/voyent.notify.js/voyent.notify.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-message/voyent-message.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-auth-provider/voyent-auth-provider.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-login-paper-card/voyent-login-paper-card.html">
+
+<dom-module id="app-view">
+  <template>
+    <style>
+      :host {
+        --app-primary-color: #0066A4;
+        --app-secondary-color: #000000;
+        --menu-link-color: #111111;
+        display: block;
+      }
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+      }
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+      .drawer-list {
+        margin: 0 20px;
+      }
+      .drawer-list a {
+        display: block;
+        padding: 0 16px;
+        text-decoration: none;
+        color: var(--app-secondary-color);
+        line-height: 40px;
+      }
+      .drawer-list a.iron-selected {
+        color: black;
+        font-weight: bold;
+      }
+
+      /* Custom Styling Below */
+      voyent-login-paper-card {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-top: 40px;
+      }
+      @media (max-width: 600px) {
+        voyent-login-paper-card{
+          padding-top: 0;
+        }
+      }
+      voyent-login-paper-card {
+        --voyent-login-button: {
+          background-color: var(--app-primary-color);
+        };
+        --voyent-login-button-hover: {
+          background-color: #203146;
+        };
+        --voyent-login-header: {
+          border-bottom:10px solid var(--app-primary-color);
+        };
+        --voyent-header-text:{
+          font-weight:500;
+        };
+        --voyent-login-image:{
+          width:100%;
+          max-width: 600px;
+          max-height:100%;
+        };
+        --voyent-shadow:{
+          background-color:var(--app-primary-color) !important;
+        };
+      }
+      app-drawer iron-icon {
+        margin-right: 33px;
+        opacity: 0.54;
+      }
+      .app-drawer > .iron-selected {
+        color: var(--app-primary-color);
+      }
+      app-drawer a {
+        text-decoration: none;
+        color: var(--menu-link-color);
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+        -ms-flex-direction: row;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+        font-family: 'Roboto', 'Noto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 24px;
+        min-height: 48px;
+        padding: 0 16px;
+      }
+      paper-badge {
+        position: relative;
+        top: -11px !important;
+        left: -5px !important;
+        --paper-badge-background: #B25F72;
+      }
+      .demo-step-badge{
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        border-radius: 50%;
+        background-color: #737373;
+        color: #FFF;
+        margin-right: 33px;
+        line-height: 27px;
+        vertical-align: middle;
+      }
+      iron-pages {
+        padding: 10px 62px 0 62px;
+      }
+      .iron-pages-top {
+        padding: 48px 62px 0 62px;
+      }
+      app-toolbar {
+        box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2)
+      }
+      app-toolbar > span {
+        color:var(--app-primary-color);
+        margin-left:-5px;
+        text-shadow:1px 1px 1px #8DAED4;
+      }
+      app-drawer {
+        --app-drawer-width: 200px;
+      }
+      paper-button[toggles] {
+        transition: all 0.3s;
+      }
+      paper-button[toggles][active] {
+        background-color: rgba(0, 0, 0, 0.25);
+      }
+      .toolbarButton {
+        font-size: 14px;
+        margin:0;
+        padding: 5px 4px;
+      }
+      @media all and (min-width: 0) and (max-width: 320px) and (orientation: portrait) {
+        .hidden-phone {
+          display: none;
+        }
+        paper-button{
+          min-width: 32px;
+        }
+      }
+      @media all and (min-width: 321px) and (max-width: 360px) and (orientation: portrait) {
+        .hidden-phone {
+          display: none;
+        }
+        paper-button{
+          min-width: 32px;
+        }
+      }
+      @media all and (min-width: 361px) and (max-width: 700px) and (orientation: portrait) {
+        .hidden-phone {
+          display: none;
+        }
+        paper-button{
+          min-width: 32px;
+        }
+      }
+      @media all and (min-width: 0) and (max-width: 480px) and (orientation: landscape) {
+        .hidden-phone {
+          display: none;
+        }
+      }
+      @media all and (min-width: 481px) and (max-width: 800px) and (orientation: landscape) {
+        .hidden-phone {
+          display: none;
+        }
+      }
+    </style>
+
+    <!--
+    We "use-hash-as-path" and use the hashed links below because
+    not doing so causes issues with deploying to sub directories
+    without having to modify the web server config
+    -->
+    <app-location route="{{route}}" use-hash-as-path></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+
+      <voyent-auth-provider id="authProvider" realm="[[_realm]]" host="[[_host]]" account="[[_account]]"
+                            logged-in="{{_isLoggedIn}}" error="{{loginError}}" timeout="240" admin="[[isAdmin]]"
+                            scope-to-path="/demos/incident/">
+      </voyent-auth-provider>
+      <voyent-login-paper-card heading="[[_loginHeading]]" username="{{_username}}" password="{{_password}}" error="{{loginError}}"
+                               auth-provider="authProvider" submit-label="Login" cancel-label="Cancel"
+                               hidden="{{_isLoggedIn}}" header-image="images/tornado.jpg" showrealminput showaccountinput
+                               showhostinput realm="{{_realm}}" account="{{_account}}" host="{{_host}}" login-as-admin="[[isAdmin]]">
+      </voyent-login-paper-card>
+
+    <template is="dom-if" if="{{_isLoggedIn}}">
+
+      <app-drawer-layout id="appDrawerLayout" fullbleed>
+        <!-- Drawer content -->
+        <app-drawer id="appDrawer">
+          <app-toolbar>Demo Steps</app-toolbar>
+          <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+
+            <template is="dom-if" if="{{isAdmin}}">
+
+              <a name="home" href="#/">
+                <iron-icon icon="home"></iron-icon>
+                <span>Home</span>
+              </a>
+              <a name="users" href="#/users" title="Setup and manage various users of the system">
+                <span class="demo-step-badge">1</span>
+                <span>Users</span>
+              </a>
+              <a name="notifications" href="#/notifications" title="View the queue of notifications">
+                <span class="demo-step-badge">2</span>
+                <span>Notifications ({{_notificationCount}})</span>
+              </a>
+              <a name="actions" href="#/actions" title="Use the action editor to setup powerful application logic">
+                <span class="demo-step-badge">3</span>
+                <span>Actions</span>
+              </a>
+              <a name="debug" href="#/debug" title="View backpack contents parsed from debug logs">
+                <span class="demo-step-badge">4</span>
+                <span>Debug</span>
+              </a>
+              <a name="events" href="#/events" title="Query and monitor system events">
+                <span class="demo-step-badge">5</span>
+                <span>Events</span>
+              </a>
+              <a name="queries" href="#/queries" title="Use the query editor, either single or chained, to manage customizable lookups">
+                <span class="demo-step-badge">6</span>
+                <span>Queries</span>
+              </a>
+              <a name="logs" href="#/logs" title="Detailed view of logging information from the services">
+                <span class="demo-step-badge">7</span>
+                <span>Logs</span>
+              </a>
+
+            </template>
+            <template is="dom-if" if="{{!isAdmin}}">
+
+              <a name="home" href="#/">
+                <iron-icon icon="home"></iron-icon>
+                <span>Home</span>
+              </a>
+              <a name="notifications" href="#/notifications" title="Queue of notifications">
+                <span class="demo-step-badge">2</span>
+                <span>Notifications ({{_notificationCount}})</span>
+              </a>
+
+            </template>
+
+          </iron-selector>
+        </app-drawer>
+
+        <!-- Main content -->
+        <app-header-layout has-scrolling-region>
+
+          <app-header condenses reveals effects="waterfall">
+            <app-toolbar>
+              <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
+
+              <div main-title>Incident Demo</div>
+
+              <template is="dom-if" if="{{_isMobile}}">
+                <paper-button class="toolbarButton" toggles active="{{_cloudSelected}}" on-click="_toggleCloud" title="Register to receive notifications via Cloud Push">
+                  <iron-icon icon="cloud-download"></iron-icon>
+                  <span class="hidden-phone">Cloud Push</span>
+                </paper-button>
+              </template>
+              <paper-button class="toolbarButton" toggles active="{{_smsSelected}}" on-click="_toggleSMS" title="Register to receive notifications via SMS">
+                <iron-icon icon="communication:textsms"></iron-icon>
+                <span class="hidden-phone">SMS</span>
+              </paper-button>
+              <paper-button class="toolbarButton" toggles active="{{_emailSelected}}" on-click="_toggleEmail" title="Register to receive notifications via E-Mail">
+                <iron-icon icon="communication:mail-outline"></iron-icon>
+                <span class="hidden-phone">E-mail</span>
+              </paper-button>
+              <paper-button class="notificationButton toolbarButton" onclick="window.location.hash='#/notifications'">
+                <iron-icon icon="mail"></iron-icon>
+                <paper-badge label="{{_notificationCount}}"></paper-badge>
+              </paper-button>
+              <paper-button class="toolbarButton" on-click="_handleLogout">
+                <iron-icon icon="lock-open"></iron-icon>
+                <span class="hidden-phone">Logout</span>
+              </paper-button>
+
+            </app-toolbar>
+          </app-header>
+
+          <div class="iron-pages-top">
+            <voyent-message usetimestamp="true"></voyent-message>
+          </div>
+
+          <iron-pages
+                  selected="[[page]]"
+                  attr-for-selected="name"
+                  fallback-selection="http404"
+                  role="main">
+
+            <template is="dom-if" if="{{isAdmin}}">
+
+              <home-view name="home"></home-view>
+              <users-view name="users" users="[[_users]]"></users-view>
+              <notifications-view name="notifications" notifications="[[_notifications]]" users="[[_users]]"></notifications-view>
+              <actions-view name="actions"></actions-view>
+              <debug-view name="debug"></debug-view>
+              <events-view name="events"></events-view>
+              <queries-view name="queries"></queries-view>
+              <logs-view name="logs"></logs-view>
+              <http404-view name="http404"></http404-view>
+
+            </template>
+            <template is="dom-if" if="{{!isAdmin}}">
+
+              <home-view name="home"></home-view>
+              <notifications-view name="notifications" notifications="[[_notifications]]"></notifications-view>
+              <http404-view name="http404"></http404-view>
+
+            </template>
+
+          </iron-pages>
+        </app-header-layout>
+      </app-drawer-layout>
+
+    </template>
+
+    <paper-toast id="toast">
+      <span>{{_toastMessage}}</span>
+    </paper-toast>
+
+    <paper-dialog id="modalDialog" modal>
+      <div>
+        <p>{{_dialogMessage}}</p>
+        <paper-input value="{{_dialogInput}}" on-keyup="_dialogKeyUp" autofocus></paper-input>
+        <paper-button title="Cancel" on-click="_cancelDialog">
+          <span>Cancel</span>
+        </paper-button>
+        <paper-button title="Confirm" on-click="_confirmDialog">
+          <span>OK</span>
+        </paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'app-view',
+
+      ready: function() {
+        this._loginHeading = this.isAdmin ? 'Admin Login' : 'Client Login';
+        this._isLoggedIn = voyent.io.auth.isLoggedIn();
+        if (this._isLoggedIn) {
+          this._setupNotificationListener();
+        }
+
+        this._isMobile = voyent.isIOS() || voyent.isAndroid();
+        this._cloudSelected = voyent.xio.push.cloudPushRegistered();
+        this._smsSelected = voyent.xio.push.smsRegistered();
+        this._emailSelected = voyent.xio.push.emailRegistered();
+
+        this._setupListeners();
+      },
+      properties: {
+        page: {
+          type: String,
+          reflectToAttribute: true,
+          observer: '_pageChanged'
+        },
+        isAdmin: {
+          type: Boolean,
+          value: false
+        },
+        _isLoggedIn: {
+          type: Boolean,
+          value: false
+        },
+        _realm: {
+          type: String,
+          value: 'incident'
+        },
+        _account:{
+          type: String,
+          value: 'demos'
+        },
+        _host: {
+          type: String,
+          value: 'dev.voyent.cloud'
+        },
+        _users: {
+          type: Array
+        },
+        _notifications: {
+          type: Array,
+          value: []
+        },
+        _notificationCount: {
+          type: Number,
+          value:0
+        }
+      },
+      observers: [
+        '_routePageChanged(routeData.page)'
+      ],
+
+      _routePageChanged: function(page) {
+        this.page = page || 'home';
+      },
+      _pageChanged: function(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl(page + '-view.html');
+        this.importHref(resolvedPageUrl, null, this._showPage404, true);
+
+        //do some work on every route change
+        this._closeDrawer();
+        voyent.io.auth.updateLastActiveTimestamp();
+      },
+      _showPage404: function() {
+        this.page = 'http404';
+      },
+      // Close drawer after menu item is selected if drawerPanel is narrow
+      _closeDrawer: function() {
+        if (this.$$('#appDrawerLayout') && this.$$('#appDrawerLayout').narrow) {
+          this.$$('#appDrawer').close();
+        }
+      },
+
+      _handleLogout: function() {
+        this.page = 'home';
+        window.location.hash = '';
+        this.$$('#authProvider').logout();
+      },
+      _toggleSMS: function() {
+        var _this = this;
+        if (this._smsSelected) {
+          this._openDialog("Please enter the phone number to register for SMS notifications",this._previouslyRegisteredPhoneNumber || '','_handleRegisterSms');
+        }
+        else {
+          voyent.xio.push.unregisterSms(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm());
+          this._smsSelected = false;
+          setTimeout(function(){
+            _this._toastMessage = 'Unregistered from SMS notifications';
+            if (_this.querySelector('#toast')) {
+              _this.querySelector('#toast').show();
+            }
+          },200);
+        }
+      },
+      _handleRegisterSms: function(cancelled) {
+        var _this = this;
+        var phonenumber = this._dialogInput;
+        if (cancelled || !phonenumber || phonenumber.trim().length === 0) {
+          _this._smsSelected = false;
+          return;
+        }
+        phonenumber = phonenumber.trim();
+        this._previouslyRegisteredPhoneNumber = phonenumber;
+        voyent.xio.push.registerSms(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm(),
+                                    voyent.io.auth.getLastKnownUsername(), phonenumber).then(function() {
+          _this._smsSelected = true;
+          _this._toastMessage = 'Registered for SMS notifications';
+          if (_this.querySelector('#toast')) {
+            _this.querySelector('#toast').show();
+          }
+        });
+      },
+      _toggleEmail: function() {
+        var _this = this;
+        if (this._emailSelected) {
+          this._openDialog('Please enter the email to register for mail notifications',this._previouslyRegisteredEmail || '','_handleRegisterEmail');
+        }
+        else {
+          voyent.xio.push.unregisterEmail(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm());
+          this._emailSelected = false;
+          setTimeout(function(){
+            _this._toastMessage = 'Unregistered from email notifications';
+            if (_this.querySelector('#toast')) {
+              _this.querySelector('#toast').show();
+            }
+          },200);
+        }
+      },
+      _handleRegisterEmail: function(cancelled) {
+        var _this = this;
+        var email = this._dialogInput;
+        if (cancelled || !email || email.trim().length === 0) {
+          _this._emailSelected = false;
+          return;
+        }
+        email = email.trim();
+        this._previouslyRegisteredEmail = email;
+        voyent.xio.push.registerEmail(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm(),
+                                      voyent.io.auth.getLastKnownUsername(), email).then(function() {
+          _this._emailSelected = true;
+          _this._toastMessage = 'Registered for email notifications';
+          if (_this.querySelector('#toast')) {
+            _this.querySelector('#toast').show();
+          }
+        });
+      },
+      _toggleCloud: function() {
+        var _this = this;
+        if (this._cloudSelected) {
+          this._handleRegisterCloud();
+        }
+        else {
+          voyent.xio.push.unregisterCloudPush(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm());
+          this._cloudSelected = false;
+          setTimeout(function() {
+            _this._toastMessage = 'Unregistered from device notifications';
+            if (_this.querySelector('#toast')) {
+              _this.querySelector('#toast').show();
+            }
+          },200);
+        }
+      },
+      _handleRegisterCloud: function() {
+        var _this = this;
+        voyent.xio.push.registerCloudPush(this._host, voyent.io.auth.getLastKnownAccount(), voyent.io.auth.getLastKnownRealm(),
+                                          voyent.io.auth.getLastKnownUsername()).then(function() {
+          _this._cloudSelected = true;
+          _this._toastMessage = 'Registered for device notifications';
+          if (_this.querySelector('#toast')) {
+            _this.querySelector('#toast').show();
+          }
+        });
+      },
+      _openDialog: function(message,input,func) {
+        this._dialogMessage = message;
+        this._dialogInput = input;
+        this._dialogFunc = func;
+        this.querySelector('#modalDialog').open();
+      },
+      _confirmDialog: function() {
+        this[this._dialogFunc](false);
+        this.querySelector('#modalDialog').close();
+      },
+      _cancelDialog: function() {
+        this._dialogMessage = '';
+        this._dialogInput = '';
+        this[this._dialogFunc](true);
+        this._dialogFunc = '';
+        this.querySelector('#modalDialog').close();
+      },
+      _dialogKeyUp: function(e) {
+        if (e.keyCode === 13) { //Enter
+          this._confirmDialog();
+        }
+        else if (e.keyCode === 27) { //Escape
+          this._cancelDialog();
+        }
+      },
+
+      _setupNotificationListener: function() {
+        if (voyent.io.auth.isLoggedIn()) {
+          voyent.xio.push.attach('http://'+this._host+'/pushio/'+ voyent.io.auth.getLastKnownAccount() +'/realms/' + voyent.io.auth.getLastKnownRealm(), voyent.io.auth.getLastKnownUsername());
+          if (this._isAdmin) {
+            this._initializePushGroups();
+          }
+        }
+      },
+      _initializePushGroups: function() {
+        var _this = this;
+        //make sure we only get the realm users once
+        if (!this._users) {
+          voyent.io.admin.getRealmUsers().then(function(users) {
+            _this._users = users;
+            joinPushGroups();
+          }).catch( function(error){
+            console.error('Error loading users in app-view:',error);
+          });
+        }
+        else {
+          joinPushGroups();
+        }
+        function joinPushGroups() {
+          function waitForPushConnection() {
+            if (!voyent.xio.push.connected) {
+              setTimeout(waitForPushConnection, 100);
+              return;
+            }
+            _this._users.forEach(function(user){
+              voyent.xio.push.join(user.username);
+            });
+          }
+          waitForPushConnection();
+        }
+      },
+      _setupListeners: function() {
+        var _this = this;
+
+        document.addEventListener('voyentNotifyInitialized',function(e) {
+          e.detail.config.autoSelectNotification = 'newest';
+        });
+
+        document.addEventListener('notificationClicked',function(e) {
+          //prevent the default behaviour of redirecting to URL
+          e.preventDefault();
+
+        });
+        document.addEventListener('notificationChanged',function() {
+
+        });
+
+        document.addEventListener('afterQueueUpdated',function(e) {
+          _this._notifications = e.detail.queue;
+          _this._notificationCount = voyent.notify.getNotificationCount();
+        });
+
+        window.addEventListener('onAfterLogin', function(){
+          console.log('onAfterLogin callback: configuring notifications');
+          _this._setupNotificationListener();
+        });
+
+        window.addEventListener('voyent-access-token-refreshed', function(e){
+          console.log('app received event voyent-access-token-refreshed', e);
+          voyent.xio.push.refreshConnection();
+        });
+
+        window.addEventListener('voyent-session-expired', function(e){
+          console.log('app received event voyent-session-expired', e);
+          voyent.xio.push.disconnect();
+        });
+
+        window.addEventListener('voyent-session-disconnected', function(e){
+          console.log('app received event voyent-session-disconnected', e);
+          voyent.xio.push.disconnect();
+        });
+      }
+    });
+  </script>
+</dom-module>

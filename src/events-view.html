@@ -1,0 +1,187 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-event-monitor/voyent-event-monitor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-event-monitor/voyent-event-monitor-repeat.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-editor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-list.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-results.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="events-view">
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+            }
+            voyent-query-results {
+                --query-results-table: {
+                    width: 100%;
+                    margin-bottom: 50px;
+                };
+                --query-results-td: {
+                    padding: 8px;
+                    line-height: 1.42857143;
+                    vertical-align: top;
+                };
+                --query-results-th: {
+                    border-bottom-width: 2px;
+                };
+            }
+            .buttons {
+                background-color: transparent;
+                padding:10px 0 10px 0;
+            }
+            .buttons button {
+                font: inherit;
+                background-color:#F9F9F9;
+                border-color: transparent;
+                color:black;
+                outline: none;
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                text-transform: uppercase;
+                cursor:pointer;
+            }
+            voyent-query-list {
+                --query-list-wrapper: {
+                    padding:10px 0 10px 0;
+                    background-color: transparent;
+                };
+                --query-list-button: {
+                    font: inherit;
+                    background-color:#F9F9F9;
+                    border-color: transparent;
+                    color:black;
+                    outline: none;
+                    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                    text-transform: uppercase;
+                    cursor:pointer;
+                };
+            }
+        </style>
+
+        <h2 class="page-title">Events</h2>
+        <div class="buttons">
+            Query Editor Controls:
+            <button id="resetEditor" onclick="document.getElementById('eventQueryEditor').resetEditor();">New/Reset</button>
+            <button id="runQuery" onclick="document.getElementById('eventQueryEditor').runQuery();">Run</button>
+            <button id="saveQuery" onclick="document.getElementById('eventQueryEditor').saveQueryWithPrompt();">Save</button>
+            <button id="cloneQuery" onclick="document.getElementById('eventQueryEditor').cloneQueryWithPrompt();">Clone</button>
+            <button id="deleteQuery" onclick="document.getElementById('eventQueryEditor').deleteQuery();">Delete</button>
+            <voyent-query-list id="queryList" for="eventQueryEditor"></voyent-query-list>
+            <label for="limitIn">Results Limit:</label>
+            <input id="limitIn" type="text" value="100">
+            <paper-button raised on-click="updateLimit">Update Limit</paper-button>
+            <br/>
+            <label for="multiIn">Multiple Event Monitors:</label>
+            <input id="multiIn" type="checkbox" checked="checked">
+        </div>
+        <voyent-query-editor id="eventQueryEditor"
+                             queryurltarget="queryURL"
+                             options='{"limit":100,"sort":{"time":-1}}'
+                             service="event" collection="events">
+        </voyent-query-editor>
+
+        <br/>
+
+        <div id="eventMonitorMulti">
+            <voyent-event-monitor-repeat id="eventMonitorRepeat">
+            </voyent-event-monitor-repeat>
+        </div>
+
+        <div id="eventMonitorSingle" style="display: none;">
+            <voyent-event-monitor id="eventMonitor">
+            </voyent-event-monitor>
+        </div>
+
+        <br/><br/>
+
+        <div>
+            <label>Query Results (Most Recent):
+                <voyent-query-results for="eventQueryEditor" utc="false"></voyent-query-results>
+            </label>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'events-view',
+
+            ready: function() {
+                var eventMonitor = this.$$('#eventMonitor');
+                var eventMonitorRepeat = this.$$('#eventMonitorRepeat');
+                var eventMonitorDiv = this.$$('#eventMonitorSingle');
+                var eventMonitorRepeatDiv = this.$$('#eventMonitorMulti');
+                var queryEditor = this.$$('#eventQueryEditor');
+                var useMultipleEventMonitors = this.$$('#multiIn').checked;
+
+                // Listen for queryExecuted event
+                queryEditor.addEventListener('queryExecuted', function(e) {
+                    // Change our divs to display the proper event monitor component
+                    eventMonitorDiv.style.display = useMultipleEventMonitors ? 'none' : 'inline';
+                    eventMonitorRepeatDiv.style.display = useMultipleEventMonitors ? 'inline' : 'none';
+
+                    // Then fire the relevant method
+                    if (useMultipleEventMonitors) {
+                        var newEM = eventMonitorRepeat.addEventMonitor(e.detail.results);
+
+                        if (newEM) {
+                            newEM.lastpoll = new Date();
+                            newEM.lastpoll.setMilliseconds(newEM.lastpoll.getMilliseconds() - newEM.pollinterval);
+
+                            newEM.poll(function() {
+                                var query = queryEditor.lastquery;
+
+                                // Manually append a time constraint to ignore results before our last poll
+                                var timedQuery = { '$and':[ { 'time':{ '$gt': newEM.lastpoll.toISOString() } } ] };
+                                timedQuery.$and.push(query);
+
+                                // Set some basic params, everything else (auth token, etc.) will use the last known on the service
+                                var params = {
+                                    collection: 'events',
+                                    options: {'limit':10,'sort':{'time':-1}},
+                                    query: timedQuery
+                                };
+
+                                function successCallback(results) {
+                                    // Append any results
+                                    // The validity of results will be checked inside the appendData function
+                                    newEM.appendData(results);
+
+                                    // Update our last poll date
+                                    newEM.lastpoll = new Date();
+                                    newEM.lastpoll.setMilliseconds(newEM.lastpoll.getMilliseconds() - newEM.pollinterval);
+                                }
+
+                                // Call our metrics service with our params
+                                voyent.io.metrics.findEvents(params).then(successCallback).catch(function(error){
+                                    console.log('findEvents caught an error:', error);
+                                });
+                            });
+                        }
+                    }
+                    else {
+                        eventMonitor.showData(e.detail.results);
+                    }
+                });
+            },
+
+            updateLimit: function() {
+                var limitField = this.$$('#limitIn');
+                var newLimit = limitField.value;
+
+                if (!isNaN(newLimit)) {
+                    if (newLimit <= 0) {
+                        newLimit = 100;
+                        limitField.value = newLimit;
+                    }
+                    else if (newLimit > 10000) {
+                        newLimit = 10000;
+                        limitField.value = newLimit;
+                    }
+
+                    this.$$('#eventQueryEditor').options.limit = parseInt(newLimit);
+                }
+            }
+        });
+    </script>
+</dom-module>

@@ -1,0 +1,22 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-backpack-log/voyent-backpack-log.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="debug-view">
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+            }
+        </style>
+
+        <h2 class="page-title">Debug - Backpack Logs</h2>
+        <voyent-backpack-log></voyent-backpack-log>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'debug-view'
+        });
+    </script>
+</dom-module>

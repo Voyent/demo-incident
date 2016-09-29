@@ -1,0 +1,160 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-action-editor/voyent-action-editor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-action-editor/voyent-action-list.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-email-editor/voyent-email-editor.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="actions-view">
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+            }
+            .tab-content {
+                border: 1px solid #777;
+                padding: 10px;
+                overflow-y:scroll;
+                color: #333 !important;
+                background-color: transparent !important;
+            }
+            paper-tabs {
+                color: #333;
+            }
+            .iron-selected {
+                background-color: var(--app-primary-color);
+                color: white;
+            }
+            voyent-action-editor {
+                --action-editor: {
+                    -webkit-touch-callout: none;
+                    -webkit-user-select: none;
+                    -khtml-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                };
+                --action-editor-action-container: {
+                    background-color: transparent;
+                };
+                --action-editor-form: {
+                    padding:0;
+                    margin:0;
+                };
+                --action-editor-task-panel: {
+                    border-color:#999;
+                    background-color: transparent;
+                };
+                --action-editor-task-panel-header: {
+                    background-color: #C5C5C5;
+                };
+                --action-editor-task-panel-item: {
+                    background-color: #DEDEDE;
+                };
+                --action-editor-task-panel-item-hover: {
+                    border-color:#3E458C;
+                };
+                --action-editor-task-panel-group-item: {
+                    background-color: #D6D6D6;
+                };
+                --action-editor-task-group: {
+                    background-color: #D6D6D6;
+                };
+                --action-editor-task: {
+                    background-color: #DEDEDE;
+                };
+                --action-editor-button-container: {
+                    background-color: transparent;
+                    padding:10px 0 10px 0;
+                };
+                --action-editor-input: {
+                    display: block;
+                    width: 100%;
+                    padding:2px 3px;
+                    font-size: 14px;
+                    line-height: 1.42857143;
+                    color: #555;
+                    background: #FFF;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+                    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+                    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+                    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+                    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+                };
+                --action-editor-button: {
+                    font: inherit;
+                    background-color:#F9F9F9;
+                    border-color: transparent;
+                    color:black;
+                    outline: none;
+                    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                    text-transform: uppercase;
+                    cursor:pointer;
+                };
+                --action-editor-event-triggers-label: {
+                    display: block;
+                    width: 100%;
+                    padding:2px 3px;
+                    font-size: 14px;
+                    line-height: 1.42857143;
+                    color: #555;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+                    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+                    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+                    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+                    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+                };
+            }
+            voyent-action-list {
+                --action-list-wrapper: {
+                    padding:10px 0 10px 0;
+                    background-color: transparent;
+                };
+                --action-list-button: {
+                    font: inherit;
+                    background-color:#F9F9F9;
+                    border-color: transparent;
+                    color:black;
+                    outline: none;
+                    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                    text-transform: uppercase;
+                    cursor:pointer;
+                };
+            }
+        </style>
+
+        <paper-tabs selected="{{selectedTab}}" no-bar>
+            <paper-tab>Actions</paper-tab>
+            <paper-tab>Emails</paper-tab>
+        </paper-tabs>
+        <iron-pages selected="{{selectedTab}}">
+            <div class="tab-content">
+                <h2 class="page-title">Actions</h2>
+                <voyent-action-editor barpad="64">
+                    <voyent-action-list></voyent-action-list>
+                </voyent-action-editor>
+            </div>
+            <div class="tab-content">
+                <h2 class="page-title">Emails</h2>
+                <voyent-email-editor id="emailEditor"></voyent-email-editor>
+            </div>
+        </iron-pages>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'actions-view',
+            properties: {
+                selectedTab: {
+                    type: Number,
+                    value: 0
+                }
+            }
+        });
+    </script>
+</dom-module>

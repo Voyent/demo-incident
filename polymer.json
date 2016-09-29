@@ -1,0 +1,39 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/app-view.html",
+  "fragments": [
+    "src/home-view.html",
+    "src/users-view.html",
+    "src/notifications-view.html",
+    "src/actions-view.html",
+    "src/debug-view.html",
+    "src/events-view.html",
+    "src/queries-view.html",
+    "src/logs-view.html",
+    "src/http404-view.html"
+  ],
+  "sourceGlobs": [
+   "src/**/*",
+   "images/**/*",
+   "bower.json"
+  ],
+  "includeDependencies": [
+    "manifest.json",
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js",
+    "bower_components/voyent-web-components/jquery-import/jquery-import.html",
+    "bower_components/jquery/dist/jquery.min.js",
+    "bower_components/voyent-web-components/voyent-query-editor/jquery-builder-import.html",
+    "bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js",
+    "bower_components/voyent-web-components/voyent-query-editor/fonts/FontAwesome.otf",
+    "bower_components/voyent-web-components/voyent-query-editor/fonts/fontawesome-webfont.eot",
+    "bower_components/voyent-web-components/voyent-query-editor/fonts/fontawesome-webfont.svg",
+    "bower_components/voyent-web-components/voyent-query-editor/fonts/fontawesome-webfont.tff",
+    "bower_components/voyent-web-components/voyent-query-editor/fonts/fontawesome-webfont.woff",
+    "bower_components/voyent-web-components/voyent-query-editor/fonts/fontawesome-webfont.woff2",
+    "bower_components/voyent-web-components/common/ace-import.html",
+    "bower_components/ace-builds/src-min-noconflict/ace.js",
+    "bower_components/ace-builds/src-min-noconflict/mode-html.js",
+    "bower_components/ace-builds/src-min-noconflict/worker-javascript.js",
+    "bower_components/voyent-web-components/voyent-code-editor/resize_handle.gif"
+  ]
+}

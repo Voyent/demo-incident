@@ -1,0 +1,219 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-query-chain-editor/voyent-query-chain-editor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-editor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-list.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-results.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="queries-view">
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+            }
+            voyent-query-list {
+                --query-list-wrapper: {
+                    padding:10px 0 10px 0;
+                    background-color: transparent;
+                    text-align:center;
+                };
+                --query-list-button: {
+                    font: inherit;
+                    background-color:#F9F9F9;
+                    border-color: transparent;
+                    color:black;
+                    outline: none;
+                    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                    text-transform: uppercase;
+                    cursor:pointer;
+                };
+            }
+            voyent-query-results {
+                --query-results-table: {
+                    width: 100%;
+                    margin-bottom: 50px;
+                };
+            }
+            .buttons {
+                text-align: center;
+                background-color: transparent;
+                padding:10px 0 10px 0;
+            }
+            .buttons button {
+                font: inherit;
+                background-color:#F9F9F9;
+                border-color: transparent;
+                color:black;
+                outline: none;
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                text-transform: uppercase;
+                cursor:pointer;
+            }
+
+            iron-selector > * {
+                padding: 8px;
+            }
+            .horizontal-section {
+                padding: 0;
+                text-align: center;
+            }
+            .iron-selected {
+                background-color: var(--app-primary-color);
+                color: white;
+            }
+            paper-dropdown-menu {
+                text-align: left;
+                margin: auto;
+                width: 180px;
+            }
+            paper-dropdown-menu.letters {
+                width: 90px;
+            }
+            paper-tabs {
+                color: #333;
+            }
+            .large {
+                width:385px;
+            }
+            .small {
+                width:190px;
+            }
+            .query-options {
+                width:385px;
+                margin:0 auto;
+            }
+            .currentquery {
+                text-align:center;
+                margin:10px;
+            }
+            .floatLeft {
+                float:left;
+            }
+            .tab-content {
+                border: 1px solid #777;
+                padding: 10px;
+                overflow-y:scroll;
+                color: #333 !important;
+                background-color: transparent !important;
+            }
+        </style>
+
+        <paper-tabs selected="{{selectedTab}}" no-bar>
+            <paper-tab>Queries</paper-tab>
+            <paper-tab>Query Chain Editor</paper-tab>
+        </paper-tabs>
+        <iron-pages selected="{{selectedTab}}">
+            <div class="tab-content">
+                <h2 class="page-title">Queries</h2>
+                <div class="buttons">
+                    Query Editor Controls:
+                    <button onclick="document.getElementById('queries').resetEditor();">New/Reset</button>
+                    <button onclick="document.getElementById('queries').runQuery();">Run</button>
+                    <button onclick="document.getElementById('queries').saveQueryWithPrompt();">Save</button>
+                    <button onclick="document.getElementById('queries').cloneQueryWithPrompt();">Clone</button>
+                    <button onclick="document.getElementById('queries').deleteQuery();">Delete</button>
+                </div>
+                <div class="query-options">
+                    <paper-dropdown-menu label="Service:" class$="{{getClass(service)}}" style="padding-right:5px;">
+                        <iron-selector class="dropdown-content" attr-for-selected="name" selected={{service}}>
+                            <div name="location">Location</div>
+                            <div name="documents">Document</div>
+                            <div name="metrics">Events</div>
+                            <div name="authadmin">AuthAdmin</div>
+                        </iron-selector>
+                    </paper-dropdown-menu>
+                    <div class="small floatLeft">
+                        <template is="dom-if" if="{{isEqual('documents', service)}}">
+                            <paper-input label="Collection:" value="{{collection}}"></paper-input>
+                        </template>
+                        <template is="dom-if" if="{{isEqual('location', service)}}">
+                            <paper-dropdown-menu label="Collection:">
+                                <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{collection}}">
+                                    <div name="regions">Regions</div>
+                                    <div name="poi">POI</div>
+                                    <div name="locations">Locations</div>
+                                </iron-selector>
+                            </paper-dropdown-menu>
+                        </template>
+                    </div>
+                    <voyent-query-list id="queryList" for="queries"></voyent-query-list>
+                    <div style="clear:both;"></div>
+                </div>
+                <div class="currentquery">[[query]]</div>
+                <voyent-query-editor id="queries" service="{{service}}" collection="{{collection}}" currentquery="{{currentquery}}"></voyent-query-editor>
+                <voyent-query-results for="queries" utc="false"></voyent-query-results>
+            </div>
+
+            <div class="tab-content">
+                <h2 class="page-title">Query Chain Editor</h2>
+                <voyent-query-chain-editor id="queryChain"></voyent-query-chain-editor>
+            </div>
+        </iron-pages>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'queries-view',
+
+            properties: {
+                service: {
+                    type: String,
+                    value: 'event',
+                    observer: 'serviceChanged'
+                },
+                collection: {
+                    type: String,
+                    value: 'events',
+                    observer: 'collectionChanged'
+                },
+                currentquery: {
+                    type: Object,
+                    observer: 'currentqueryChanged'
+                },
+                selectedTab: {
+                    type: Number,
+                    value: 0
+                }
+            },
+
+            serviceChanged: function(service) {
+                if (service === 'metrics') {
+                    this.collection = 'events';
+                }
+                else if (service === 'authadmin') {
+                    this.collection = 'users';
+                }
+                else if (service === 'documents') {
+                    this.collection = '';
+                }
+            },
+
+            collectionChanged: function() {
+                this.$$('#queries').reloadEditor();
+            },
+
+            currentqueryChanged: function(currentquery) {
+                this.query = JSON.stringify(currentquery);
+                if (this.query === '{}') {
+                    this.query = '';
+                }
+            },
+
+            getClass: function(service) {
+                if (service === 'location' || service === 'documents') {
+                    return 'small floatLeft';
+                }
+                return 'large floatLeft';
+            },
+
+            isEqual: function(val1, val2){
+                return val1 === val2;
+            }
+        });
+    </script>
+</dom-module>

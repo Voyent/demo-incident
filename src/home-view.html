@@ -1,0 +1,56 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="home-view">
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+            }
+            :host paper-card ::content .header .title-text{
+                color: #FFF !important;
+            }
+            :host ::content .title-text.over-image.paper-card{
+                text-shadow: 3px 1px 4px #000;
+            }
+            :host ::content .header.paper-card{
+
+                border-bottom: 10px solid var(--app-primary-color);
+            }
+            .card-content > p {
+                font-weight: normal;
+                font-size: 14px;
+                line-height: 24px;
+            }
+            paper-card{
+                max-width:550px;
+
+                --paper-card-header-image:{
+                    height: auto;
+                    width: auto;
+                    justify-content: center;
+                };
+                --paper-card-header-text:{
+                    text-shadow: 1px 1px 0 black !important;
+                    font-weight: 700;
+                    font-size:xx-large;
+                };
+            }
+        </style>
+
+        <paper-card heading="Introduction" image="images/tornado.jpg">
+            <div class="card-content">
+                <p>
+                    Description
+                </p>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'home-view'
+        });
+    </script>
+</dom-module>
