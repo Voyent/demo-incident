@@ -32,7 +32,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-icons/communication-icons.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-xio-import/voyent-xio-import.html">
 <link rel="import" href="../bower_components/voyent.notify.js/voyent.notify.html">
-<link rel="import" href="../bower_components/voyent-web-components/voyent-message/voyent-message.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-auth-provider/voyent-auth-provider.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-login-paper-card/voyent-login-paper-card.html">
 
@@ -149,9 +148,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       iron-pages {
         padding: 10px 62px 0 62px;
-      }
-      .iron-pages-top {
-        padding: 48px 62px 0 62px;
+        margin-top: 48px;
       }
       app-toolbar {
         box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2)
@@ -174,6 +171,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         font-size: 14px;
         margin:0;
         padding: 5px 4px;
+      }
+      #errorToast{
+        background-color: #C70000;
       }
       @media all and (min-width: 0) and (max-width: 320px) and (orientation: portrait) {
         .hidden-phone {
@@ -328,15 +328,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </app-toolbar>
           </app-header>
 
-          <div class="iron-pages-top">
-            <voyent-message usetimestamp="true"></voyent-message>
-          </div>
-
-          <iron-pages
-                  selected="[[page]]"
-                  attr-for-selected="name"
-                  fallback-selection="http404"
-                  role="main">
+          <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="http404" role="main">
 
             <template is="dom-if" if="{{isAdmin}}">
 
@@ -365,8 +357,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     </template>
 
-    <paper-toast id="toast">
+    <paper-toast id="toast" duration="4000">
       <span>{{_toastMessage}}</span>
+    </paper-toast>
+
+    <paper-toast id="errorToast" duration="4000">
+      <span>{{_toastErrorMessage}}</span>
     </paper-toast>
 
     <paper-dialog id="modalDialog" modal>
@@ -629,6 +625,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       _setupListeners: function() {
         var _this = this;
+
+        //error handling
+        this.addEventListener('message-error', function(e) {
+          _this._toastErrorMessage = 'Error: ' + e.detail;
+          if (_this.querySelector('#errorToast')) {
+            _this.querySelector('#errorToast').show();
+          }
+        });
 
         document.addEventListener('voyentNotifyInitialized',function(e) {
           e.detail.config.autoSelectNotification = 'newest';
