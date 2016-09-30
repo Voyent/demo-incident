@@ -121,14 +121,14 @@
                 <div class="query-options">
                     <paper-dropdown-menu label="Service:" class$="{{getClass(service)}}" style="padding-right:5px;">
                         <iron-selector class="dropdown-content" attr-for-selected="name" selected={{service}}>
-                            <div name="location">Location</div>
-                            <div name="documents">Document</div>
-                            <div name="metrics">Events</div>
+                            <div name="locate">Location</div>
+                            <div name="docs">Document</div>
+                            <div name="event">Events</div>
                             <div name="authadmin">AuthAdmin</div>
                         </iron-selector>
                     </paper-dropdown-menu>
                     <div class="small floatLeft">
-                        <template is="dom-if" if="{{isEqual('documents', service)}}">
+                        <template is="dom-if" if="{{isEqual('docs', service)}}">
                             <paper-input label="Collection:" value="{{collection}}"></paper-input>
                         </template>
                         <template is="dom-if" if="{{isEqual('location', service)}}">
@@ -168,8 +168,7 @@
                 },
                 collection: {
                     type: String,
-                    value: 'events',
-                    observer: 'collectionChanged'
+                    value: 'events'
                 },
                 currentquery: {
                     type: Object,
@@ -182,19 +181,9 @@
             },
 
             serviceChanged: function(service) {
-                if (service === 'metrics') {
-                    this.collection = 'events';
-                }
-                else if (service === 'authadmin') {
-                    this.collection = 'users';
-                }
-                else if (service === 'documents') {
+                if (service === 'docs') {
                     this.collection = '';
                 }
-            },
-
-            collectionChanged: function() {
-                this.$$('#queries').reloadEditor();
             },
 
             currentqueryChanged: function(currentquery) {
@@ -205,7 +194,7 @@
             },
 
             getClass: function(service) {
-                if (service === 'location' || service === 'documents') {
+                if (service === 'locate' || service === 'docs') {
                     return 'small floatLeft';
                 }
                 return 'large floatLeft';

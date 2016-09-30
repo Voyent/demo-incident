@@ -32,6 +32,7 @@
     "bower_components/voyent-web-components/voyent-query-editor/fonts/fontawesome-webfont.woff2",
     "bower_components/voyent-web-components/common/ace-import.html",
     "bower_components/ace-builds/src-min-noconflict/ace.js",
+    "bower_components/ace-builds/src-min-noconflict/mode-javascript.js",
     "bower_components/ace-builds/src-min-noconflict/mode-html.js",
     "bower_components/ace-builds/src-min-noconflict/worker-javascript.js",
     "bower_components/voyent-web-components/voyent-code-editor/resize_handle.gif"
