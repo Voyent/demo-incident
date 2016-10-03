@@ -1,0 +1,21 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-location-editor/voyent-location-editor.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="map-view">
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+            }
+        </style>
+
+        <voyent-location-editor height="500"></voyent-location-editor>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'map-view'
+        });
+    </script>
+</dom-module>

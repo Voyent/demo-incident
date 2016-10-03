@@ -279,11 +279,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </template>
             <template is="dom-if" if="{{!isAdmin}}">
 
-              <a name="home" href="#/">
-                <iron-icon icon="home"></iron-icon>
-                <span>Home</span>
+              <a name="map" href="#/map" title="View a readonly map of incidents and the current user's location">
+                <span class="demo-step-badge">1</span>
+                <span>Map</span>
               </a>
-              <a name="notifications" href="#/notifications" title="Queue of notifications">
+              <a name="notifications" href="#/notifications" title="View the queue of notifications">
                 <span class="demo-step-badge">2</span>
                 <span>Notifications ({{_notificationCount}})</span>
               </a>
@@ -345,7 +345,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </template>
             <template is="dom-if" if="{{!isAdmin}}">
 
-              <home-view name="home"></home-view>
+              <map-view name="map"></map-view>
               <notifications-view name="notifications" notifications="[[_notifications]]"></notifications-view>
               <http404-view name="http404"></http404-view>
 
@@ -437,7 +437,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ],
 
       _routePageChanged: function(page) {
-        this.page = page || 'home';
+        this.page = page || (this.isAdmin ? 'home' : 'map');
       },
       _pageChanged: function(page) {
         // Load page import on demand. Show 404 page if fails
@@ -459,7 +459,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       _handleLogout: function() {
-        this.page = 'home';
+        this.page = this.isAdmin ? 'home' : 'map';
         window.location.hash = '';
         this.$$('#authProvider').logout();
       },

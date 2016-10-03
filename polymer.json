@@ -2,15 +2,16 @@
   "entrypoint": "index.html",
   "shell": "src/app-view.html",
   "fragments": [
-    "src/home-view.html",
-    "src/users-view.html",
-    "src/notifications-view.html",
     "src/actions-view.html",
     "src/debug-view.html",
     "src/events-view.html",
-    "src/queries-view.html",
+    "src/home-view.html",
+    "src/http404-view.html",
     "src/logs-view.html",
-    "src/http404-view.html"
+    "src/map-view.html",
+    "src/notifications-view.html",
+    "src/queries-view.html",
+    "src/users-view.html"
   ],
   "sourceGlobs": [
    "src/**/*",
