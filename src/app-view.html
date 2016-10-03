@@ -578,7 +578,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _setupNotificationListener: function() {
         if (voyent.io.auth.isLoggedIn()) {
           voyent.xio.push.attach('http://'+this._host+'/pushio/'+ voyent.io.auth.getLastKnownAccount() +'/realms/' + voyent.io.auth.getLastKnownRealm(), voyent.io.auth.getLastKnownUsername());
-          if (this._isAdmin) {
+          if (this.isAdmin) {
             this._initializePushGroups();
           }
         }
