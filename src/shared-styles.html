@@ -19,6 +19,88 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         line-height: 26px !important;
         font-size: 26px !important;
       }
+      iron-selector > * {
+        padding: 8px;
+      }
+      .iron-selected {
+        background-color: var(--app-primary-color);
+        color: white;
+      }
+      paper-dropdown-menu {
+        text-align: left;
+        margin: auto;
+        width: 180px;
+      }
+      paper-tabs {
+        color: #333;
+      }
+      .tab-content {
+        border: 1px solid #777;
+        padding: 10px;
+        overflow-y:scroll;
+        color: #333 !important;
+        background-color: transparent !important;
+      }
+      paper-toggle-button {
+        margin-bottom: 40px;
+        display: block;
+      }
+      paper-toggle-button:last-child {
+        margin-bottom: 0;
+      }
+      paper-toggle-button.green {
+        --paper-toggle-button-checked-bar-color: #0066A3;
+        --paper-toggle-button-checked-button-color: #0066A3;
+        --paper-toggle-button-checked-ink-color: #0066A3;
+        --paper-toggle-button-unchecked-bar-color: #004670;
+        --paper-toggle-button-unchecked-button-color: #004670;
+        --paper-toggle-button-unchecked-ink-color: #004670;
+      }
+      .buttons {
+        text-align: center;
+        background-color: transparent;
+        padding:10px 0 10px 0;
+      }
+      .buttons button {
+        font: inherit;
+        background-color:#F9F9F9;
+        border-color: transparent;
+        color:black;
+        outline: none;
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        text-transform: uppercase;
+        cursor:pointer;
+      }
+      voyent-query-list {
+        --query-list-wrapper: {
+          padding:10px 0 10px 0;
+          background-color: transparent;
+        };
+        --query-list-button: {
+          font: inherit;
+          background-color:#F9F9F9;
+          border-color: transparent;
+          color:black;
+          outline: none;
+          box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+          text-transform: uppercase;
+          cursor:pointer;
+        };
+      }
+      voyent-query-results {
+        --query-results-table: {
+          width: 100%;
+          margin-bottom: 50px;
+        };
+        --query-results-td: {
+          padding: 8px;
+          line-height: 1.42857143;
+          vertical-align: top;
+        };
+        --query-results-th: {
+          border-bottom-width: 2px;
+        };
+      }
 
     </style>
   </template>
