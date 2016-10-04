@@ -237,12 +237,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <app-drawer-layout id="appDrawerLayout" fullbleed>
         <!-- Drawer content -->
-        <app-drawer id="appDrawer">
+        <app-drawer id="appDrawer" hidden="{{isDashboard}}">
           <app-toolbar>Demo Steps</app-toolbar>
           <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
-
             <template is="dom-if" if="{{isAdmin}}">
-
               <a name="home" href="#/">
                 <iron-icon icon="home"></iron-icon>
                 <span>Home</span>
@@ -255,30 +253,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <span class="demo-step-badge">2</span>
                 <span>Notifications ({{_notificationCount}})</span>
               </a>
-              <a name="actions" href="#/actions" title="Use the action editor to setup powerful application logic">
+              <a name="dashboard" href="#/dashboard" title="Manage incidents and their associated message templates">
                 <span class="demo-step-badge">3</span>
+                <span>Dashboard</span>
+              </a>
+              <a name="actions" href="#/actions" title="Use the action editor to setup powerful application logic">
+                <span class="demo-step-badge">4</span>
                 <span>Actions</span>
               </a>
               <a name="debug" href="#/debug" title="View backpack contents parsed from debug logs">
-                <span class="demo-step-badge">4</span>
+                <span class="demo-step-badge">5</span>
                 <span>Debug</span>
               </a>
               <a name="events" href="#/events" title="Query and monitor system events">
-                <span class="demo-step-badge">5</span>
+                <span class="demo-step-badge">6</span>
                 <span>Events</span>
               </a>
               <a name="queries" href="#/queries" title="Use the query editor, either single or chained, to manage customizable lookups">
-                <span class="demo-step-badge">6</span>
+                <span class="demo-step-badge">7</span>
                 <span>Queries</span>
               </a>
               <a name="logs" href="#/logs" title="Detailed view of logging information from the services">
-                <span class="demo-step-badge">7</span>
+                <span class="demo-step-badge">8</span>
                 <span>Logs</span>
               </a>
-
             </template>
             <template is="dom-if" if="{{!isAdmin}}">
-
               <a name="map" href="#/map" title="View a readonly map of incidents and the current user's location">
                 <span class="demo-step-badge">1</span>
                 <span>Map</span>
@@ -287,9 +287,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <span class="demo-step-badge">2</span>
                 <span>Notifications ({{_notificationCount}})</span>
               </a>
-
             </template>
-
           </iron-selector>
         </app-drawer>
 
@@ -329,28 +327,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </app-header>
 
           <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="http404" role="main">
-
             <template is="dom-if" if="{{isAdmin}}">
-
-              <home-view name="home"></home-view>
-              <users-view name="users" users="[[_users]]"></users-view>
-              <notifications-view name="notifications" notifications="[[_notifications]]" users="[[_users]]"></notifications-view>
-              <actions-view name="actions"></actions-view>
-              <debug-view name="debug"></debug-view>
-              <events-view name="events"></events-view>
-              <queries-view name="queries"></queries-view>
-              <logs-view name="logs"></logs-view>
-              <http404-view name="http404"></http404-view>
-
+                <template is="dom-if" if="{{isDashboard}}">
+                    <dashboard-view name="dashboard"></dashboard-view>
+                </template>
+                <template is="dom-if" if="{{!isDashboard}}">
+                    <home-view name="home"></home-view>
+                    <users-view name="users" users="[[_users]]"></users-view>
+                    <notifications-view name="notifications" notifications="[[_notifications]]" users="[[_users]]"></notifications-view>
+                    <dashboard-view name="dashboard"></dashboard-view>
+                    <actions-view name="actions"></actions-view>
+                    <debug-view name="debug"></debug-view>
+                    <events-view name="events"></events-view>
+                    <queries-view name="queries"></queries-view>
+                    <logs-view name="logs"></logs-view>
+                    <http404-view name="http404"></http404-view>
+                </template>
             </template>
             <template is="dom-if" if="{{!isAdmin}}">
-
               <map-view name="map"></map-view>
               <notifications-view name="notifications" notifications="[[_notifications]]"></notifications-view>
               <http404-view name="http404"></http404-view>
-
             </template>
-
           </iron-pages>
         </app-header-layout>
       </app-drawer-layout>
@@ -381,7 +379,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       is: 'app-view',
 
       ready: function() {
-        this._loginHeading = this.isAdmin ? 'Admin Login' : 'Client Login';
+        this._loginHeading = this.isAdmin ? (this.isDashboard ? 'Dashboard Login' : 'Admin Login') : 'Client Login';
+        console.log('_loginHeading',this._loginHeading);
         this._isLoggedIn = voyent.io.auth.isLoggedIn();
         if (this._isLoggedIn) {
           this._setupNotificationListener();
@@ -401,6 +400,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           observer: '_pageChanged'
         },
         isAdmin: {
+          type: Boolean,
+          value: false
+        },
+        isDashboard: {
           type: Boolean,
           value: false
         },
@@ -437,7 +440,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ],
 
       _routePageChanged: function(page) {
-        this.page = page || (this.isAdmin ? 'home' : 'map');
+        this.page = page || (this.isAdmin ? (this.isDashboard ? 'dashboard' : 'home') : 'map');
       },
       _pageChanged: function(page) {
         // Load page import on demand. Show 404 page if fails
@@ -459,7 +462,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       _handleLogout: function() {
-        this.page = this.isAdmin ? 'home' : 'map';
+        this.page = this.isAdmin ? (this.isDashboard ? 'dashboard' : 'home') : 'map';
         window.location.hash = '';
         this.$$('#authProvider').logout();
       },
@@ -590,8 +593,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           voyent.io.admin.getRealmUsers().then(function(users) {
             _this._users = users;
             joinPushGroups();
-          }).catch( function(error){
-            console.error('Error loading users in app-view:',error);
+          }).catch( function(error) {
+            _this.fire('message-error', "Error loading users in app-view: " + error);
           });
         }
         else {

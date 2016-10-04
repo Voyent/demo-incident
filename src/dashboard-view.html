@@ -1,0 +1,99 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-location-editor/voyent-location-editor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-transport-editor/voyent-transport-editor.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="dashboard-view">
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+            }
+        </style>
+
+        <paper-tabs selected="{{selectedTab}}" no-bar>
+            <paper-tab>Map</paper-tab>
+            <paper-tab>Message Templates</paper-tab>
+        </paper-tabs>
+        <iron-pages selected="{{selectedTab}}">
+            <div class="tab-content">
+                <voyent-location-editor height="500"></voyent-location-editor>
+            </div>
+            <div class="tab-content">
+                <paper-dropdown-menu label="Incidents:">
+                    <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
+                        <template is="dom-repeat" items="{{trackers}}">
+                            <div name="{{item._id}}">{{item._id}}</div>
+                        </template>
+                    </iron-selector>
+                </paper-dropdown-menu>
+                <template is="dom-if" if="{{tracker}}">
+                    <paper-dropdown-menu label="Zones:">
+                        <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{zone}}" on-iron-select="zoneSelected">
+                            <template is="dom-repeat" items="{{trackers}}" as="tracker">
+                                <template is="dom-repeat" items="{{tracker.zones.features}}" as="zone">
+                                    <div name="{{zone.id}}">{{zone.id}}</div>
+                                </template>
+                            </template>
+                        </iron-selector>
+                    </paper-dropdown-menu>
+                </template>
+                <voyent-transport-editor simple></voyent-transport-editor>
+            </div>
+        </iron-pages>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'dashboard-view',
+
+            ready: function() {
+                var _this = this;
+                //fetch all the trackers for the realm so we can populate the UI
+                /*voyent.io.location.findTrackers().then(function(trackers) {
+                    this.trackers = trackers;
+                }).catch(function(error) {
+                    console.log('findTrackers caught an error:', error);
+                });*/
+
+                //fetch tracker data that contains associated message templates
+                /*voyent.io.scope.getRealmData({"property": ""}).then(function(data) {
+                    this.trackerData = data;
+                }).catch(function(error) {
+                    _this.fire('message-error', "Failed retrieving message templates from realm scope: " + error);
+                });*/
+            },
+
+            zoneSelected: function(e) {
+                if (!this.tracker || !this.zone) {
+                    return;
+                }
+                //load message template from trackerData if exists
+            },
+            
+            properties: {
+                selectedTab: {
+                    type: Number,
+                    value: 0
+                },
+                trackers: {
+                    type: Array,
+                    value: []
+                },
+                tracker: {
+                    type: String
+                },
+                zone: {
+                    type: String
+                },
+                trackerData: {
+                    type: Object
+                }
+            }
+        });
+    </script>
+</dom-module>

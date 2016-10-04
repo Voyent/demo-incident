@@ -63,6 +63,8 @@
             is: 'events-view',
 
             ready: function() {
+                var _this = this;
+
                 var eventMonitor = this.$$('#eventMonitor');
                 var eventMonitorRepeat = this.$$('#eventMonitorRepeat');
                 var eventMonitorDiv = this.$$('#eventMonitorSingle');
@@ -110,7 +112,7 @@
 
                                 // Call our event service with our params
                                 voyent.io.event.findEvents(params).then(successCallback).catch(function(error){
-                                    console.log('findEvents caught an error:', error);
+                                    _this.fire('message-error', "Error retrieving events: " + error);
                                 });
                             });
                         }
