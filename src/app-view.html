@@ -297,27 +297,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <app-header condenses reveals effects="waterfall">
             <app-toolbar>
               <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
-
-              <div main-title>Incident Demo</div>
-
-              <template is="dom-if" if="{{_isMobile}}">
-                <paper-button class="toolbarButton" toggles active="{{_cloudSelected}}" on-click="_toggleCloud" title="Register to receive notifications via Cloud Push">
-                  <iron-icon icon="cloud-download"></iron-icon>
-                  <span class="hidden-phone">Cloud Push</span>
+              <div main-title>
+                <template is="dom-if" if="{{isDashboard}}">Incident Dashboard</template>
+                <template is="dom-if" if="{{!isDashboard}}">Incident Demo</template>
+              </div>
+              <template is="dom-if" if="{{!isDashboard}}">
+                <template is="dom-if" if="{{_isMobile}}">
+                  <paper-button class="toolbarButton" toggles active="{{_cloudSelected}}" on-click="_toggleCloud" title="Register to receive notifications via Cloud Push">
+                    <iron-icon icon="cloud-download"></iron-icon>
+                    <span class="hidden-phone">Cloud Push</span>
+                  </paper-button>
+                </template>
+                <paper-button class="toolbarButton" toggles active="{{_smsSelected}}" on-click="_toggleSMS" title="Register to receive notifications via SMS">
+                  <iron-icon icon="communication:textsms"></iron-icon>
+                  <span class="hidden-phone">SMS</span>
+                </paper-button>
+                <paper-button class="toolbarButton" toggles active="{{_emailSelected}}" on-click="_toggleEmail" title="Register to receive notifications via E-Mail">
+                  <iron-icon icon="communication:mail-outline"></iron-icon>
+                  <span class="hidden-phone">E-mail</span>
+                </paper-button>
+                <paper-button class="notificationButton toolbarButton" onclick="window.location.hash='#/notifications'">
+                  <iron-icon icon="mail"></iron-icon>
+                  <paper-badge label="{{_notificationCount}}"></paper-badge>
                 </paper-button>
               </template>
-              <paper-button class="toolbarButton" toggles active="{{_smsSelected}}" on-click="_toggleSMS" title="Register to receive notifications via SMS">
-                <iron-icon icon="communication:textsms"></iron-icon>
-                <span class="hidden-phone">SMS</span>
-              </paper-button>
-              <paper-button class="toolbarButton" toggles active="{{_emailSelected}}" on-click="_toggleEmail" title="Register to receive notifications via E-Mail">
-                <iron-icon icon="communication:mail-outline"></iron-icon>
-                <span class="hidden-phone">E-mail</span>
-              </paper-button>
-              <paper-button class="notificationButton toolbarButton" onclick="window.location.hash='#/notifications'">
-                <iron-icon icon="mail"></iron-icon>
-                <paper-badge label="{{_notificationCount}}"></paper-badge>
-              </paper-button>
               <paper-button class="toolbarButton" on-click="_handleLogout">
                 <iron-icon icon="lock-open"></iron-icon>
                 <span class="hidden-phone">Logout</span>
