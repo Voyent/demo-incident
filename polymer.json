@@ -22,6 +22,8 @@
   "includeDependencies": [
     "manifest.json",
     "bower_components/webcomponentsjs/webcomponents-lite.min.js",
+    "client.html",
+    "dashboard.html",
     "bower_components/voyent-web-components/jquery-import/jquery-import.html",
     "bower_components/jquery/dist/jquery.min.js",
     "bower_components/voyent-web-components/voyent-query-editor/jquery-builder-import.html",
