@@ -234,7 +234,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </voyent-login-paper-card>
 
     <template is="dom-if" if="{{_isLoggedIn}}">
-
       <app-drawer-layout id="appDrawerLayout" fullbleed>
         <!-- Drawer content -->
         <app-drawer id="appDrawer" hidden="{{isDashboard}}">
@@ -293,7 +292,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- Main content -->
         <app-header-layout has-scrolling-region>
-
           <app-header condenses reveals effects="waterfall">
             <app-toolbar>
               <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
@@ -325,7 +323,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <iron-icon icon="lock-open"></iron-icon>
                 <span class="hidden-phone">Logout</span>
               </paper-button>
-
             </app-toolbar>
           </app-header>
 
@@ -355,7 +352,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </iron-pages>
         </app-header-layout>
       </app-drawer-layout>
-
     </template>
 
     <paper-toast id="toast" duration="4000">
