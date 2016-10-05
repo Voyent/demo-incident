@@ -289,7 +289,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
               <div main-title>
                 <template is="dom-if" if="{{isDashboard}}">Incident Dashboard</template>
-                <template is="dom-if" if="{{!isDashboard}}">Incident Demo</template>
+                <template is="dom-if" if="{{!isDashboard}}"><span class="hidden-phone">Incident Demo</span></template>
               </div>
               <template is="dom-if" if="{{!isDashboard}}">
                 <template is="dom-if" if="{{_isMobile}}">
