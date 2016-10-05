@@ -39,17 +39,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <template>
     <style>
       :host {
-        --app-primary-color: #0066A4;
+        --app-primary-color: var(--override-primary-color, #0066A4);
         --app-secondary-color: #000000;
         --menu-link-color: #111111;
         display: block;
       }
-      app-header {
+      app-header, a paper-button {
         color: #fff;
         background-color: var(--app-primary-color);
       }
       app-header paper-icon-button {
         --paper-icon-button-ink-color: white;
+      }
+      .headerLink {
+          font-size: 14px;
+          line-height: 1;
       }
       .drawer-list {
         margin: 0 20px;
@@ -64,6 +68,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       .drawer-list a.iron-selected {
         color: black;
         font-weight: bold;
+      }
+      .noShadow {
+          box-shadow: none;
       }
 
       /* Custom Styling Below */
@@ -90,6 +97,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         };
         --voyent-header-text:{
           font-weight:500;
+          text-shadow: 3px 1px 4px var(--app-primary-color);
         };
         --voyent-login-image:{
           width:100%;
@@ -134,24 +142,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         left: -5px !important;
         --paper-badge-background: #B25F72;
       }
-      .demo-step-badge{
-        display: inline-block;
-        width: 25px;
-        height: 25px;
-        text-align: center;
-        border-radius: 50%;
-        background-color: #737373;
-        color: #FFF;
-        margin-right: 33px;
-        line-height: 27px;
-        vertical-align: middle;
-      }
-      iron-pages {
+      .iron-pages-padtrue {
         padding: 10px 62px 0 62px;
         margin-top: 48px;
       }
+      .iron-pages-padfalse {
+        padding: 0;
+        margin-top: 0;
+      }
       app-toolbar {
-        box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2)
+        box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
       }
       app-toolbar > span {
         color:var(--app-primary-color);
@@ -160,6 +160,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       app-drawer {
         --app-drawer-width: 200px;
+        box-shadow: 3px 0px 6px rgba(0,0,0,0.2);
       }
       paper-button[toggles] {
         transition: all 0.3s;
@@ -230,14 +231,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <voyent-login-paper-card heading="[[_loginHeading]]" username="{{_username}}" password="{{_password}}" error="{{loginError}}"
                                auth-provider="authProvider" submit-label="Login" cancel-label="Cancel"
                                hidden="{{_isLoggedIn}}" header-image="images/tornado.jpg" showrealminput showaccountinput
-                               showhostinput realm="{{_realm}}" account="{{_account}}" host="{{_host}}" login-as-admin="[[isAdmin]]">
+                               showhostinput realm="{{_realm}}" account="{{_account}}" host="{{_host}}" login-as-admin="[[isAdmin]]"
+                               hideallowed="{{isClient}}" hideclosed="{{isClient}}">
       </voyent-login-paper-card>
 
     <template is="dom-if" if="{{_isLoggedIn}}">
       <app-drawer-layout id="appDrawerLayout" fullbleed>
         <!-- Drawer content -->
-        <app-drawer id="appDrawer" hidden="{{isDashboard}}">
-          <app-toolbar>Demo Steps</app-toolbar>
+        <app-drawer id="appDrawer" hidden="{{isClientOrDashboard()}}" swipeOpen="true">
+          <app-toolbar class="noShadow">System Setup</app-toolbar>
           <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
             <template is="dom-if" if="{{isAdmin}}">
               <a name="home" href="#/">
@@ -245,46 +247,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <span>Home</span>
               </a>
               <a name="users" href="#/users" title="Setup and manage various users of the system">
-                <span class="demo-step-badge">1</span>
+                <iron-icon icon="perm-identity"></iron-icon>
                 <span>Users</span>
               </a>
               <a name="notifications" href="#/notifications" title="View the queue of notifications">
-                <span class="demo-step-badge">2</span>
+                <iron-icon icon="announcement"></iron-icon>
                 <span>Notifications ({{_notificationCount}})</span>
               </a>
               <a name="dashboard" href="#/dashboard" title="Manage incidents and their associated message templates">
-                <span class="demo-step-badge">3</span>
+                <iron-icon icon="important-devices"></iron-icon>
                 <span>Dashboard</span>
               </a>
               <a name="actions" href="#/actions" title="Use the action editor to setup powerful application logic">
-                <span class="demo-step-badge">4</span>
+                <iron-icon icon="track-changes"></iron-icon>
                 <span>Actions</span>
               </a>
               <a name="debug" href="#/debug" title="View backpack contents parsed from debug logs">
-                <span class="demo-step-badge">5</span>
+                <iron-icon icon="bug-report"></iron-icon>
                 <span>Debug</span>
               </a>
               <a name="events" href="#/events" title="Query and monitor system events">
-                <span class="demo-step-badge">6</span>
+                <iron-icon icon="send"></iron-icon>
                 <span>Events</span>
               </a>
               <a name="queries" href="#/queries" title="Use the query editor, either single or chained, to manage customizable lookups">
-                <span class="demo-step-badge">7</span>
+                <iron-icon icon="filter-list"></iron-icon>
                 <span>Queries</span>
               </a>
               <a name="logs" href="#/logs" title="Detailed view of logging information from the services">
-                <span class="demo-step-badge">8</span>
+                <iron-icon icon="receipt"></iron-icon>
                 <span>Logs</span>
-              </a>
-            </template>
-            <template is="dom-if" if="{{!isAdmin}}">
-              <a name="map" href="#/map" title="View a readonly map of incidents and the current user's location">
-                <span class="demo-step-badge">1</span>
-                <span>Map</span>
-              </a>
-              <a name="notifications" href="#/notifications" title="View the queue of notifications">
-                <span class="demo-step-badge">2</span>
-                <span>Notifications ({{_notificationCount}})</span>
               </a>
             </template>
           </iron-selector>
@@ -314,8 +306,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                   <iron-icon icon="communication:mail-outline"></iron-icon>
                   <span class="hidden-phone">E-mail</span>
                 </paper-button>
-                <paper-button class="notificationButton toolbarButton" onclick="window.location.hash='#/notifications'">
-                  <iron-icon icon="mail"></iron-icon>
+                <template is="dom-if" if="{{isClient}}">
+                  <a name="map" href="#/map" class="headerLink" title="View a readonly map of incidents and the current user's location">
+                      <paper-button class="toolbarButton">
+                        <iron-icon icon="language"></iron-icon>
+                        <span class="hidden-phone">Map</span>
+                      </paper-button>
+                  </a>
+                </template>
+                <paper-button class="notificationButton toolbarButton" onclick="window.location.hash='#/notifications'" title="View notification queue">
+                  <iron-icon icon="announcement"></iron-icon>
                   <paper-badge label="{{_notificationCount}}"></paper-badge>
                 </paper-button>
               </template>
@@ -325,7 +325,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </paper-button>
             </app-toolbar>
           </app-header>
-
+          
+          <div class$="iron-pages-pad{{!isClient}}">
           <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="http404" role="main">
             <template is="dom-if" if="{{isAdmin}}">
                 <template is="dom-if" if="{{isDashboard}}">
@@ -341,15 +342,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <events-view name="events"></events-view>
                     <queries-view name="queries"></queries-view>
                     <logs-view name="logs"></logs-view>
-                    <http404-view name="http404"></http404-view>
                 </template>
             </template>
             <template is="dom-if" if="{{!isAdmin}}">
-              <map-view name="map"></map-view>
-              <notifications-view name="notifications" notifications="[[_notifications]]"></notifications-view>
-              <http404-view name="http404"></http404-view>
+                <map-view name="map"></map-view>
+                <notifications-view name="notifications" notifications="[[_notifications]]"></notifications-view>
             </template>
+            <http404-view name="http404"></http404-view>
           </iron-pages>
+          </div>
         </app-header-layout>
       </app-drawer-layout>
     </template>
@@ -406,6 +407,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           type: Boolean,
           value: false
         },
+        isClient: {
+          type: Boolean,
+          value: false
+        },
         _isLoggedIn: {
           type: Boolean,
           value: false
@@ -437,6 +442,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       observers: [
         '_routePageChanged(routeData.page)'
       ],
+      
+      isClientOrDashboard: function() {
+        return this.isClient || this.isDashboard;
+      },
 
       _routePageChanged: function(page) {
         this.page = page || (this.isAdmin ? (this.isDashboard ? 'dashboard' : 'home') : 'map');
