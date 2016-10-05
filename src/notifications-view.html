@@ -71,18 +71,23 @@
             .sortButtons {
                 font-size:small;
             }
+            .paddingToptrue {
+                padding-top: 20px;
+            }
         </style>
 
-        <h2 class="page-title">Notification Queue</h2>
-        <template is="dom-if" if="{{isAdmin}}">
-            <paper-toggle-button checked="{{_groupByUser}}">Group by User</paper-toggle-button>
-        </template>
-        <div class="sortButtons">
-            <template is="dom-if" if="{{!_groupByUser}}">
-                <paper-button on-click="_chooseSortAscending">Sort Newest First</paper-button>
-                <paper-button on-click="_chooseSortDescending">Sort Oldest First</paper-button>
+        <div class$="paddingTop{{!isAdmin}}">
+            <h2 class="page-title">Notification Queue</h2>
+            <template is="dom-if" if="{{isAdmin}}">
+                <paper-toggle-button checked="{{_groupByUser}}">Group by User</paper-toggle-button>
             </template>
-            <paper-button on-click='_resetNotifications'>Clear All</paper-button>
+            <div class="sortButtons">
+                <template is="dom-if" if="{{!_groupByUser}}">
+                    <paper-button on-click="_chooseSortAscending">Sort Newest First</paper-button>
+                    <paper-button on-click="_chooseSortDescending">Sort Oldest First</paper-button>
+                </template>
+                <paper-button on-click='_resetNotifications'>Clear All</paper-button>
+            </div>
         </div>
         <div>
             <template is="dom-if" if="{{!_groupByUser}}">
