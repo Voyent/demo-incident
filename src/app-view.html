@@ -382,7 +382,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       ready: function() {
         this._loginHeading = this.isAdmin ? (this.isDashboard ? 'Dashboard Login' : 'Admin Login') : 'Client Login';
-        console.log('_loginHeading',this._loginHeading);
         this._isLoggedIn = voyent.io.auth.isLoggedIn();
         if (this._isLoggedIn) {
           this._setupNotificationListener();
