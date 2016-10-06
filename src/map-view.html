@@ -22,12 +22,14 @@
             },
             
             ready: function() {
-                this.calcHeight();
-                
                 var _this = this;
                 window.addEventListener("resize", function() {
                     _this.calcHeight();
                 });
+            },
+            
+            attached: function() {
+                this.calcHeight();
             },
             
             calcHeight: function() {
