@@ -9,13 +9,40 @@
                 display: block;
             }
         </style>
-
-        <voyent-location-editor height="500"></voyent-location-editor>
+        
+        <voyent-location-editor height="{{height}}" width="100%"></voyent-location-editor>
     </template>
 
     <script>
         Polymer({
-            is: 'map-view'
+            is: 'map-view',
+            
+            properties: {
+                height: { type: Number, value: 500, notify: true },
+            },
+            
+            ready: function() {
+                this.calcHeight();
+                
+                var _this = this;
+                window.addEventListener("resize", function() {
+                    _this.calcHeight();
+                });
+            },
+            
+            calcHeight: function() {
+                var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+                
+                if (document.getElementById("mainHeader")) {
+                    var headerHeight = document.getElementById("mainHeader").clientHeight;
+                    if (headerHeight) {
+                        h -= headerHeight;
+                    }
+                }
+                
+                console.log("Setting map height to " + h);
+                this.set("height", h);
+            }
         });
     </script>
 </dom-module>

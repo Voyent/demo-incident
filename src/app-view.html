@@ -234,7 +234,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                showhostinput realm="{{_realm}}" account="{{_account}}" host="{{_host}}" login-as-admin="[[isAdmin]]"
                                hideallowed="{{isClient}}" hideclosed="{{isClient}}">
       </voyent-login-paper-card>
-
+      
     <template is="dom-if" if="{{_isLoggedIn}}">
       <app-drawer-layout id="appDrawerLayout" fullbleed>
         <!-- Drawer content -->
@@ -285,7 +285,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <!-- Main content -->
         <app-header-layout has-scrolling-region>
           <app-header condenses reveals effects="waterfall">
-            <app-toolbar>
+            <app-toolbar id="mainHeader">
                 <template is="dom-if" if="{{!isClient}}">
                     <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
                 </template>
