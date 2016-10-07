@@ -629,6 +629,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           _this._showErrorToast(e.detail);
         });
 
+        this.addEventListener('message-info', function(e) {
+          _this._showInfoToast(e.detail);
+        });
+
         document.addEventListener('voyentNotifyInitialized',function(e) {
           e.detail.config.autoSelectNotification = 'newest';
         });
