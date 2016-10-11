@@ -1,9 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-query-chain-editor/voyent-query-chain-editor.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-editor.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-query-editor/voyent-query-list.html">
@@ -16,22 +13,9 @@
             :host {
                 display: block;
             }
-            .large {
-                width:385px;
-            }
-            .small {
-                width:190px;
-            }
-            .query-options {
-                width:385px;
-                margin:0 auto;
-            }
             .currentquery {
                 text-align:center;
                 margin:10px;
-            }
-            .floatLeft {
-                float:left;
             }
         </style>
 
@@ -49,37 +33,11 @@
                     <button onclick="document.getElementById('queries').cloneQueryWithPrompt();">Clone</button>
                     <button onclick="document.getElementById('queries').deleteQuery();">Delete</button>
                 </div>
-                <div class="query-options">
-                    <paper-dropdown-menu label="Service:" class$="{{getClass(service)}}" style="padding-right:5px;">
-                        <iron-selector class="dropdown-content" attr-for-selected="name" selected={{service}}>
-                            <div name="locate">Location</div>
-                            <div name="docs">Document</div>
-                            <div name="event">Events</div>
-                            <div name="authadmin">AuthAdmin</div>
-                        </iron-selector>
-                    </paper-dropdown-menu>
-                    <div class="small floatLeft">
-                        <template is="dom-if" if="{{isEqual('docs', service)}}">
-                            <paper-input label="Collection:" value="{{collection}}"></paper-input>
-                        </template>
-                        <template is="dom-if" if="{{isEqual('locate', service)}}">
-                            <paper-dropdown-menu label="Collection:">
-                                <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{collection}}">
-                                    <div name="regions">Regions</div>
-                                    <div name="poi">POI</div>
-                                    <div name="locations">Locations</div>
-                                </iron-selector>
-                            </paper-dropdown-menu>
-                        </template>
-                    </div>
-                    <voyent-query-list id="queryList" for="queries"></voyent-query-list>
-                    <div style="clear:both;"></div>
-                </div>
+                <voyent-query-list id="queryList" for="queries"></voyent-query-list>
                 <div class="currentquery">[[query]]</div>
-                <voyent-query-editor id="queries" service="{{service}}" collection="{{collection}}" currentquery="{{currentquery}}"></voyent-query-editor>
+                <voyent-query-editor id="queries" currentquery="{{currentquery}}" showselectmenus></voyent-query-editor>
                 <voyent-query-results for="queries" utc="false"></voyent-query-results>
             </div>
-
             <div class="tab-content">
                 <voyent-query-chain-editor id="queryChain"></voyent-query-chain-editor>
             </div>
@@ -91,15 +49,6 @@
             is: 'queries-view',
 
             properties: {
-                service: {
-                    type: String,
-                    value: 'event',
-                    observer: 'serviceChanged'
-                },
-                collection: {
-                    type: String,
-                    value: 'events'
-                },
                 currentquery: {
                     type: Object,
                     observer: 'currentqueryChanged'
@@ -110,28 +59,11 @@
                 }
             },
 
-            serviceChanged: function(service) {
-                if (service === 'docs') {
-                    this.collection = 'documents';
-                }
-            },
-
             currentqueryChanged: function(currentquery) {
                 this.query = JSON.stringify(currentquery);
                 if (this.query === '{}') {
                     this.query = '';
                 }
-            },
-
-            getClass: function(service) {
-                if (service === 'locate' || service === 'docs') {
-                    return 'small floatLeft';
-                }
-                return 'large floatLeft';
-            },
-
-            isEqual: function(val1, val2){
-                return val1 === val2;
             }
         });
     </script>
