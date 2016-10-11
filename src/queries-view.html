@@ -17,6 +17,10 @@
                 text-align:center;
                 margin:10px;
             }
+            .query-list {
+                width:385px;
+                margin:0 auto;
+            }
         </style>
 
         <paper-tabs selected="{{selectedTab}}" no-bar>
@@ -33,7 +37,9 @@
                     <button onclick="document.getElementById('queries').cloneQueryWithPrompt();">Clone</button>
                     <button onclick="document.getElementById('queries').deleteQuery();">Delete</button>
                 </div>
-                <voyent-query-list id="queryList" for="queries"></voyent-query-list>
+                <div class="query-list">
+                    <voyent-query-list id="queryList" for="queries"></voyent-query-list>
+                </div>
                 <div class="currentquery">[[query]]</div>
                 <voyent-query-editor id="queries" currentquery="{{currentquery}}" showselectmenus></voyent-query-editor>
                 <voyent-query-results for="queries" utc="false"></voyent-query-results>
