@@ -27,7 +27,7 @@
                 <paper-dropdown-menu horizontal-align="left" label="Incidents:">
                     <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
                         <template is="dom-repeat" items="{{trackers}}">
-                            <div name="{{item._id}}">{{item._id}}</div>
+                            <div name="{{item._id}}">{{item.properties.zoneNamespace}}</div>
                         </template>
                     </iron-selector>
                 </paper-dropdown-menu>
