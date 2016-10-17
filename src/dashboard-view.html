@@ -24,7 +24,7 @@
                 <voyent-location-editor height="500"></voyent-location-editor>
             </div>
             <div class="tab-content">
-                <paper-dropdown-menu label="Incidents:">
+                <paper-dropdown-menu horizontal-align="left" label="Incidents:">
                     <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
                         <template is="dom-repeat" items="{{trackers}}">
                             <div name="{{item._id}}">{{item._id}}</div>
@@ -32,7 +32,7 @@
                     </iron-selector>
                 </paper-dropdown-menu>
                 <template is="dom-if" if="{{tracker}}">
-                    <paper-dropdown-menu label="Zones:">
+                    <paper-dropdown-menu horizontal-align="left" label="Zones:">
                         <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{zone}}">
                             <template is="dom-repeat" items="{{zones}}">
                                 <div name="{{item.properties.zoneId}}">{{item.properties.zoneId}}</div>
