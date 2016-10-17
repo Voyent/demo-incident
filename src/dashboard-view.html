@@ -59,7 +59,8 @@
             properties: {
                 selectedTab: {
                     type: Number,
-                    value: 0
+                    value: 0,
+                    observer: '_tabChanged'
                 },
                 trackers: {
                     type: Array,
@@ -101,14 +102,7 @@
             ready: function() {
                 var _this = this;
                 //fetch all the trackers for the realm so we can populate the UI
-                voyent.io.locate.getAllTrackers({}).then(function(trackers) {
-                    _this.trackers = trackers;
-                }).catch(function(error) {
-                    if (error.status !== 404) {
-                        _this.fire('message-error', 'Failed retrieving trackers');
-                        console.error('Failed retrieving trackers:',error);
-                    }
-                });
+                this._getTrackers();
 
                 //fetch tracker data that contains associated message templates
                 voyent.io.scope.getRealmData({'property': this._dataProperty}).then(function(data) {
@@ -172,15 +166,10 @@
                 this.zone = null;
                 this.messageTemplate = null;
                 //set the list of zones based on the selected tracker
-                for (var i=0; i<this.trackers.length; i++) {
-                    if (tracker === this.trackers[i]._id) {
-                        this.zones = this.trackers[i].zones.features;
-                        break;
-                    }
-                }
+                this._updateZones();
             },
 
-            _zoneSelected: function(e) {
+            _zoneSelected: function() {
                 if (!this.tracker || !this.zone) {
                     this.showButtons = false;
                     return;
@@ -200,8 +189,41 @@
                 this.fire('message-info', 'Loaded saved message template');
             },
 
+            _tabChanged: function() {
+                //update the tracker list each time the message template view is shown
+                if (this.selectedTab !== 1) {
+                    return;
+                }
+                this._getTrackers();
+            },
+
             _getScopedPropertyName: function() {
                 return this._dataProperty+'.'+this.tracker+'.'+this.zone;
+            },
+
+            _getTrackers: function() {
+                var _this = this;
+                voyent.io.locate.getAllTrackers({}).then(function(trackers) {
+                    _this.trackers = trackers;
+                    //if we have a tracker selected then update the zones
+                    if (_this.tracker) {
+                        _this._updateZones();
+                    }
+                }).catch(function(error) {
+                    if (error.status !== 404) {
+                        _this.fire('message-error', 'Failed retrieving trackers');
+                        console.error('Failed retrieving trackers:',error);
+                    }
+                });
+            },
+
+            _updateZones: function() {
+                for (var i=0; i<this.trackers.length; i++) {
+                    if (this.tracker === this.trackers[i]._id) {
+                        this.zones = this.trackers[i].zones.features;
+                        break;
+                    }
+                }
             }
         });
     </script>

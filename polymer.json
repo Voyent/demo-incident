@@ -45,6 +45,7 @@
     "bower_components/voyent-web-components/voyent-location-editor/css/QueryBarIcon.png",
     "bower_components/voyent-web-components/voyent-location-editor/css/regionImportImage.png",
     "bower_components/voyent-web-components/voyent-location-editor/css/searchImage.png",
+    "bower_components/voyent-web-components/voyent-location-editor/css/trackerImage.png",
     "bower_components/voyent-web-components/common/imports/d3.html",
     "bower_components/d3/d3.min.js"
   ]
