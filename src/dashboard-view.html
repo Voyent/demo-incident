@@ -205,7 +205,6 @@
                 var _this = this;
                 voyent.io.locate.getAllTrackers({}).then(function(trackers) {
                     _this.trackers = trackers;
-                    //if we have a tracker selected then update the zones
                     if (_this.tracker) {
                         _this._updateZones();
                     }
@@ -219,11 +218,27 @@
 
             _updateZones: function() {
                 for (var i=0; i<this.trackers.length; i++) {
+                    //check if the selected tracker exists
                     if (this.tracker === this.trackers[i]._id) {
                         this.zones = this.trackers[i].zones.features;
-                        break;
+                        //check if the selected zone exists
+                        if (this.zone) {
+                            for (var j=0; j<this.zones.length; j++) {
+                                if (this.zone === this.zones[j].properties.zoneId) {
+                                    return;
+                                }
+                            }
+                            //the selected zone was no longer found so reset it
+                            this.zone = null;
+                        }
+                        return;
                     }
                 }
+                //the selected tracker was no longer found so
+                //update the menus and reset the selections
+                this.tracker = null;
+                this.zone = null;
+                this.zones = null;
             }
         });
     </script>
