@@ -64,7 +64,7 @@
             properties: {
                 visible: {
                     type: Boolean,
-                    observer: '_visibleChanged'
+                    value: false
                 },
                 selectedTab: {
                     type: Number,
@@ -254,17 +254,6 @@
                 this.tracker = null;
                 this.zone = null;
                 this.zones = null;
-            },
-
-            _visibleChanged: function(visible,oldVisible) {
-                //if the previous visible value was undefined then
-                //it means this is the first time the page was loaded
-                //so don't call refreshMap since it will be called
-                //automatically by the component
-                if (visible && typeof oldVisible !== 'undefined') {
-                    //refresh the map each time the view is loaded
-                    this.$.simulator.refreshMap();
-                }
             }
         });
     </script>
