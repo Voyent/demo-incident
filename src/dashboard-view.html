@@ -5,6 +5,7 @@
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-location-simulator/voyent-location-simulator.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-location-simulator/voyent-location-route.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-location-simulator/voyent-location-simulations.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-transport-editor/voyent-transport-editor.html">
 <link rel="import" href="shared-styles.html">
 
@@ -22,7 +23,10 @@
         </paper-tabs>
         <iron-pages selected="{{selectedTab}}">
             <div class="tab-content">
-                <voyent-location-simulator id="simulator"></voyent-location-simulator>
+                <voyent-location-simulator id="simulator">
+                    <voyent-location-simulations></voyent-location-simulations>
+                    <voyent-location-route></voyent-location-route>
+                </voyent-location-simulator>
             </div>
             <div class="tab-content">
                 <paper-dropdown-menu horizontal-align="left" label="Incidents:">
