@@ -30,6 +30,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../bower_components/iron-icons/maps-icons.html">
 <link rel="import" href="../bower_components/voyent-web-components/common/imports/voyent-xio.html">
 <link rel="import" href="../bower_components/voyent.notify.js/voyent.notify.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-auth-provider/voyent-auth-provider.html">
@@ -254,7 +255,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <iron-icon icon="announcement"></iron-icon>
                 <span>Notifications ({{_notificationCount}})</span>
               </a>
-              <a name="dashboard" href="#/dashboard" title="Manage incidents and their associated message templates">
+              <a name="incident" href="#/incident" title="Manage incidents">
+                <iron-icon icon="maps:edit-location"></iron-icon>
+                <span>Incidents</span>
+              </a>
+              <a name="dashboard" href="#/dashboard" title="Simulate incident movement and manage their associated message templates">
                 <iron-icon icon="important-devices"></iron-icon>
                 <span>Dashboard</span>
               </a>
@@ -338,6 +343,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <home-view name="home"></home-view>
                     <users-view name="users" users="[[_users]]"></users-view>
                     <notifications-view name="notifications" notifications="[[_notifications]]" users="[[_users]]"></notifications-view>
+                    <incident-view name="incident"></incident-view>
                     <dashboard-view name="dashboard"></dashboard-view>
                     <actions-view name="actions"></actions-view>
                     <debug-view name="debug"></debug-view>

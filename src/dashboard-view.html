@@ -3,7 +3,7 @@
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
-<link rel="import" href="../bower_components/voyent-web-components/voyent-location-editor/voyent-location-editor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-location-simulator/voyent-location-simulator.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-transport-editor/voyent-transport-editor.html">
 <link rel="import" href="shared-styles.html">
 
@@ -21,7 +21,7 @@
         </paper-tabs>
         <iron-pages selected="{{selectedTab}}">
             <div class="tab-content">
-                <voyent-location-editor height="500"></voyent-location-editor>
+                <voyent-location-simulator id="simulator"></voyent-location-simulator>
             </div>
             <div class="tab-content">
                 <paper-dropdown-menu horizontal-align="left" label="Incidents:">
@@ -113,6 +113,12 @@
                         console.error('Failed retrieving message templates:',error);
                     }
                 });
+
+                //for an undetermined reason the map renders only as a gray box when navigating to this view when
+                //first loading the map on the incident view so for now call resizeMap to workaround the issue
+                setTimeout(function() {
+                    _this.$.simulator.resizeMap();
+                },1000);
             },
 
             saveTemplate: function() {
