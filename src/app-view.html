@@ -337,26 +337,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="http404" role="main">
             <template is="dom-if" if="{{isAdmin}}">
                 <template is="dom-if" if="{{isDashboard}}">
-                    <dashboard-view name="dashboard"></dashboard-view>
+                    <dashboard-view name="dashboard" visible="{{_isEqual('dashboard', page)}}"></dashboard-view>
                 </template>
                 <template is="dom-if" if="{{!isDashboard}}">
-                    <home-view name="home"></home-view>
-                    <users-view name="users" users="[[_users]]"></users-view>
-                    <notifications-view name="notifications" notifications="[[_notifications]]" users="[[_users]]"></notifications-view>
-                    <incident-view name="incident"></incident-view>
-                    <dashboard-view name="dashboard"></dashboard-view>
-                    <actions-view name="actions"></actions-view>
-                    <debug-view name="debug"></debug-view>
-                    <events-view name="events"></events-view>
-                    <queries-view name="queries"></queries-view>
-                    <logs-view name="logs"></logs-view>
+                    <home-view name="home" visible="{{_isEqual('home', page)}}"></home-view>
+                    <users-view name="users" visible="{{_isEqual('users', page)}}" users="[[_users]]"></users-view>
+                    <notifications-view name="notifications" visible="{{_isEqual('notifications', page)}}" notifications="[[_notifications]]" users="[[_users]]"></notifications-view>
+                    <incident-view name="incident" visible="{{_isEqual('incident', page)}}"></incident-view>
+                    <dashboard-view name="dashboard" visible="{{_isEqual('dashboard', page)}}"></dashboard-view>
+                    <actions-view name="actions" visible="{{_isEqual('actions', page)}}"></actions-view>
+                    <debug-view name="debug" visible="{{_isEqual('debug', page)}}"></debug-view>
+                    <events-view name="events" visible="{{_isEqual('events', page)}}"></events-view>
+                    <queries-view name="queries" visible="{{_isEqual('queries', page)}}"></queries-view>
+                    <logs-view name="logs" visible="{{_isEqual('logs', page)}}"></logs-view>
                 </template>
             </template>
             <template is="dom-if" if="{{!isAdmin}}">
-                <map-view name="map"></map-view>
-                <notifications-view name="notifications" notifications="[[_notifications]]"></notifications-view>
+                <map-view name="map" visible="{{_isEqual('map', page)}}"></map-view>
+                <notifications-view name="notifications" visible="{{_isEqual('notifications', page)}}" notifications="[[_notifications]]"></notifications-view>
             </template>
-            <http404-view name="http404"></http404-view>
+            <http404-view name="http404" visible="{{_isEqual('http404', page)}}"></http404-view>
           </iron-pages>
           </div>
         </app-header-layout>
@@ -474,6 +474,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         if (this.$$('#appDrawerLayout') && this.$$('#appDrawerLayout').narrow) {
           this.$$('#appDrawer').close();
         }
+      },
+      _isEqual: function(a,b) {
+        return a === b;
       },
 
       _handleLogout: function() {

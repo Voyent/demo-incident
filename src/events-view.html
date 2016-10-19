@@ -63,6 +63,13 @@
         Polymer({
             is: 'events-view',
 
+            properties: {
+                visible: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+
             ready: function() {
                 var _this = this;
 

@@ -18,7 +18,14 @@
             is: 'map-view',
             
             properties: {
-                height: { type: Number, value: 500, notify: true },
+                visible: {
+                    type: Boolean,
+                    value: false
+                },
+                height: { type: Number,
+                    value: 500,
+                    notify: true
+                }
             },
             
             ready: function() {

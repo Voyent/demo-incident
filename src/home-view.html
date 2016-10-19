@@ -48,7 +48,14 @@
 
     <script>
         Polymer({
-            is: 'home-view'
+            is: 'home-view',
+
+            properties: {
+                visible: {
+                    type: Boolean,
+                    value: false
+                }
+            }
         });
     </script>
 </dom-module>

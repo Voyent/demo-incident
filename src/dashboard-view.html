@@ -4,6 +4,7 @@
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-location-simulator/voyent-location-simulator.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-location-simulator/voyent-location-route.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-transport-editor/voyent-transport-editor.html">
 <link rel="import" href="shared-styles.html">
 
@@ -57,6 +58,10 @@
             is: 'dashboard-view',
 
             properties: {
+                visible: {
+                    type: Boolean,
+                    value: false
+                },
                 selectedTab: {
                     type: Number,
                     value: 0,

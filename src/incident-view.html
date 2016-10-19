@@ -16,7 +16,14 @@
 
     <script>
         Polymer({
-            is: 'incident-view'
+            is: 'incident-view',
+
+            properties: {
+                visible: {
+                    type: Boolean,
+                    value: false
+                }
+            }
         });
     </script>
 </dom-module>

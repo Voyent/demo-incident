@@ -35,7 +35,14 @@
 
   <script>
     Polymer({
-      is: 'http404-view'
+        is: 'http404-view',
+
+        properties: {
+            visible: {
+                type: Boolean,
+                value: false
+            }
+        }
     });
   </script>
 </dom-module>

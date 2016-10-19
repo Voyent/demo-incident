@@ -55,6 +55,10 @@
             is: 'queries-view',
 
             properties: {
+                visible: {
+                    type: Boolean,
+                    value: false
+                },
                 currentquery: {
                     type: Object,
                     observer: 'currentqueryChanged'
