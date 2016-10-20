@@ -32,7 +32,7 @@
                 <paper-dropdown-menu horizontal-align="left" label="Incidents:">
                     <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
                         <template is="dom-repeat" items="{{trackers}}">
-                            <div name="{{item._id}}">{{item.properties.zoneNamespace}}</div>
+                            <div name="{{item.properties.zoneNamespace}}">{{item.properties.zoneNamespace}}</div>
                         </template>
                     </iron-selector>
                 </paper-dropdown-menu>
@@ -234,7 +234,7 @@
             _updateZones: function() {
                 for (var i=0; i<this.trackers.length; i++) {
                     //check if the selected tracker exists
-                    if (this.tracker === this.trackers[i]._id) {
+                    if (this.tracker === this.trackers[i].properties.zoneNamespace) {
                         this.zones = this.trackers[i].zones.features;
                         //check if the selected zone exists
                         if (this.zone) {
