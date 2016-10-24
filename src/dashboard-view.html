@@ -143,9 +143,18 @@
                     this.fire('message-error', 'Cannot save: Please enter a message');
                     return;
                 }
+                
+                // Clean up our messageTemplate of superfluous variables
+                if (messageTemplate.global.priority) {
+                    delete messageTemplate.global.priority;
+                }
+                if (messageTemplate.global.expire_time) {
+                    delete messageTemplate.global.expire_time;
+                }
+                
                 var data = {};
                 //specify the property this way to selectively update the record
-                data[this._getScopedPropertyName()] = this.messageTemplate;
+                data[this._getScopedPropertyName()] = messageTemplate;
                 voyent.io.scope.createRealmData({'data': data}).then(function() {
                     if (!_this.trackerData[_this.tracker]) {
                         _this.trackerData[_this.tracker] = {};
