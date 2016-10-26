@@ -253,7 +253,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </a>
               <a name="notifications" href="#/notifications" title="View the queue of notifications">
                 <iron-icon icon="announcement"></iron-icon>
-                <span>Notifications ({{_notificationCount}})</span>
+                <template is="dom-if" if="{{_hasLargeNotificationCount(_notificationCount)}}">
+                    <span title$="{{_notificationCount}} notifications total">Notifications <span style="font-size: 9px; font-weight: normal;">(99+)</span></span>
+                </template>
+                <template is="dom-if" if="{{!_hasLargeNotificationCount(_notificationCount)}}">
+                    <span>Notifications <span style="font-size: 12px; font-weight: normal;">({{_notificationCount}})</span></span>
+                </template>
               </a>
               <a name="incident" href="#/incident" title="Manage incidents">
                 <iron-icon icon="maps:edit-location"></iron-icon>
@@ -631,6 +636,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           waitForPushConnection();
         }
       },
+      /**
+       * Check if we have a large (triple digit, >99) amount of notifications
+       */
+      _hasLargeNotificationCount: function(toCheck) {
+        return toCheck > 99;
+      },
       _setupListeners: function() {
         var _this = this;
 
@@ -657,7 +668,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         document.addEventListener('afterQueueUpdated',function(e) {
           _this._notifications = e.detail.queue;
-          _this._notificationCount = voyent.notify.getNotificationCount();
+          _this.set('_notificationCount', voyent.notify.getNotificationCount());
         });
 
         window.addEventListener('onAfterLogin', function(){
