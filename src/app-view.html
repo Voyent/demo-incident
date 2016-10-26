@@ -685,6 +685,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         window.addEventListener('voyent-session-expired', function(e){
           console.log('app received event voyent-session-expired', e);
           voyent.xio.push.disconnect();
+          _this._handleLogout();
         });
 
         window.addEventListener('voyent-session-disconnected', function(e){
