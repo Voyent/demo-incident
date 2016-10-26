@@ -229,7 +229,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             logged-in="{{_isLoggedIn}}" error="{{loginError}}" timeout="240" admin="[[isAdmin]]"
                             scope-to-path="/demos/incident/">
       </voyent-auth-provider>
-      <voyent-login-paper-card heading="[[_loginHeading]]" username="{{_username}}" password="{{_password}}" error="{{loginError}}"
+      <voyent-login-paper-card id="loginCard" heading="[[_loginHeading]]" username="{{_username}}" password="{{_password}}" error="{{loginError}}"
                                auth-provider="authProvider" submit-label="Login" cancel-label="Cancel"
                                hidden="{{_isLoggedIn}}" header-image="images/tornado.jpg" showrealminput showaccountinput
                                showhostinput realm="{{_realm}}" account="{{_account}}" host="{{_host}}" login-as-admin="[[isAdmin]]"
@@ -487,6 +487,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _handleLogout: function() {
         this.page = this.isAdmin ? (this.isDashboard ? 'dashboard' : 'home') : 'map';
         window.location.hash = '';
+        this.$$('#loginCard').password = '';
         this.$$('#authProvider').logout();
       },
       _toggleSMS: function() {
