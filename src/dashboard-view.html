@@ -64,7 +64,8 @@
             properties: {
                 visible: {
                     type: Boolean,
-                    value: false
+                    value: false,
+                    observer: '_visibleChanged'
                 },
                 selectedTab: {
                     type: Number,
@@ -122,12 +123,6 @@
                         console.error('Failed retrieving message templates:',error);
                     }
                 });
-
-                //for an undetermined reason the map renders only as a gray box when navigating to this view when
-                //first loading the map on the incident view so for now call resizeMap to workaround the issue
-                setTimeout(function() {
-                    _this.$.simulator.resizeMap();
-                },1000);
             },
 
             saveTemplate: function() {
@@ -263,7 +258,16 @@
                 this.tracker = null;
                 this.zone = null;
                 this.zones = null;
-            }
+            },
+
+            _visibleChanged: function(visible) {
+                var _this = this;
+                if (visible) {
+                    setTimeout(function() {
+                        _this.$.simulator.resizeMap();
+                    },500);
+                }
+            },
         });
     </script>
 </dom-module>
