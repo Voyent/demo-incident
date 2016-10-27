@@ -665,7 +665,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             e.preventDefault();
             if(_this.page === 'map'){
               var routeRef = document.querySelector('map-view');
-              routeRef.updateLocations();
+              routeRef.moveLocations(e);
             }
           }
         });

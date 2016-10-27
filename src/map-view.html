@@ -37,7 +37,8 @@
                     type:Array,
                     value:[]
                 },
-                user: {type:Object}
+                user: {type:Object},
+                trackers: {type:Object}
             },
             
             ready: function() {
@@ -55,7 +56,7 @@
                         center: start
                     });
                     _this.map = map;
-                    _this.updateLocations(true);
+                    _this.getLocations(true);
                 };
                 if (!('google' in window) || !('maps' in window.google)) {
                     var script = document.createElement('script');
@@ -96,29 +97,28 @@
                             return;
                         }
                         voyent.xio.push.join('trackerMove');
-                        voyent.xio.push.join('steve.maryka');
                     }
 
                     waitForPushConnection();
                 }
                 else{
                     voyent.xio.push.leave('trackerMove');
-                    voyent.xio.push.leave('steve.maryka');
                 }
             },
 
-            updateLocations:function(resetMap){
+            getLocations:function(resetMap){
                 var promises = [];
                 var trackers;
                 var location;
                 _this.oldUser = _this.user;
-                _this.oldAnchor = _this.anchor;
-                _this.oldZones = _this.zones;
+                //_this.oldAnchor = _this.anchor;
+                //_this.oldZones = _this.zones;
                 _this.zones = [];
+                _this.trackers = {};
                 promises.push(voyent.io.locate.getAllTrackers({realm:_this.realm}).then(function (t) {
                     trackers = t;
+                    console.log(trackers);
                 }));
-
 
                 promises.push(voyent.io.locate.findLocations({realm:voyent.io.auth.getLastKnownRealm(),'query':{'username':voyent.io.auth.getLastKnownUsername()}, 'options':{"sort":{"lastUpdated":-1},"limit":1}}).then(function(l){
                     location = l[0];
@@ -142,13 +142,13 @@
                         if(_this.oldUser){
                             _this.oldUser.setMap(null)
                         }
-                        if(_this.oldAnchor){
+                        /**if(_this.oldAnchor){
                             _this.oldAnchor.setMap(null);
                         }
                         for(var i = 0; i < _this.oldZones.length; i++){
                             _this.oldZones[i].setMap(null);
-                        }
-                        for (var i = 0; i < trackers.length; i++) {
+                        }*/
+                        for (i = 0; i < trackers.length; i++) {
                             try {
 
                                 var anchorCoords = trackers[i].anchor.geometry.coordinates;
@@ -168,9 +168,11 @@
                                     zIndex: trackers[i].anchor.properties.zIndex
                                 });
                                 _this.anchor = poi;
+
                                 bounds.extend(googlePoint);
                                 var geoJSON = trackers[i];
 
+                                var zones = [];
                                 for(var j = 0; j < geoJSON.zones.features.length; j++){
 
                                     var zone = geoJSON.zones.features[j];
@@ -183,11 +185,13 @@
                                         'fillColor': zone.properties.Color,
                                         'zIndex': metadata.zIndex
                                     });
-                                    _this.zones.push(region);
+                                    zones.push(region);
+                                    region.bindTo('center', poi, 'position');
                                 }
                                 if (!geoJSON.properties.zoneNamespace) {
                                     geoJSON.properties.zoneNamespace = 'default';
                                 }
+                                _this.trackers[trackers[i]._id] = {'anchor':poi,'zones':zones};
 
                             }
                             catch (err) {
@@ -216,6 +220,11 @@
                     console.log('<voyent-locations> Error: ' + ( error.message || error.responseText));
                     console.log(error);
                 });
+            },
+            moveLocations:function(event){
+                var payload = JSON.parse(event.detail.notification.payload);
+                var newLocation = new google.maps.LatLng({lat:payload.location[1],lng:payload.location[0]});
+                _this.trackers[payload.trackerId].anchor.setPosition(newLocation);
             }
         });
     </script>
