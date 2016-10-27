@@ -229,7 +229,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             logged-in="{{_isLoggedIn}}" error="{{loginError}}" timeout="240" admin="[[isAdmin]]"
                             scope-to-path="/demos/incident/">
       </voyent-auth-provider>
-      <voyent-login-paper-card heading="[[_loginHeading]]" username="{{_username}}" password="{{_password}}" error="{{loginError}}"
+      <voyent-login-paper-card id="loginCard" heading="[[_loginHeading]]" username="{{_username}}" password="{{_password}}" error="{{loginError}}"
                                auth-provider="authProvider" submit-label="Login" cancel-label="Cancel"
                                hidden="{{_isLoggedIn}}" header-image="images/tornado.jpg" showrealminput showaccountinput
                                showhostinput realm="{{_realm}}" account="{{_account}}" host="{{_host}}" login-as-admin="[[isAdmin]]"
@@ -253,7 +253,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </a>
               <a name="notifications" href="#/notifications" title="View the queue of notifications">
                 <iron-icon icon="announcement"></iron-icon>
-                <span>Notifications ({{_notificationCount}})</span>
+                <template is="dom-if" if="{{_hasLargeNotificationCount(_notificationCount)}}">
+                    <span title$="{{_notificationCount}} notifications total">Notifications <span style="font-size: 9px; font-weight: normal;">(99+)</span></span>
+                </template>
+                <template is="dom-if" if="{{!_hasLargeNotificationCount(_notificationCount)}}">
+                    <span>Notifications <span style="font-size: 12px; font-weight: normal;">({{_notificationCount}})</span></span>
+                </template>
               </a>
               <a name="incident" href="#/incident" title="Manage incidents">
                 <iron-icon icon="maps:edit-location"></iron-icon>
@@ -482,6 +487,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _handleLogout: function() {
         this.page = this.isAdmin ? (this.isDashboard ? 'dashboard' : 'home') : 'map';
         window.location.hash = '';
+        this.$$('#loginCard').password = '';
         this.$$('#authProvider').logout();
       },
       _toggleSMS: function() {
@@ -631,6 +637,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           waitForPushConnection();
         }
       },
+      /**
+       * Check if we have a large (triple digit, >99) amount of notifications
+       */
+      _hasLargeNotificationCount: function(toCheck) {
+        return toCheck > 99;
+      },
       _setupListeners: function() {
         var _this = this;
 
@@ -657,7 +669,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         document.addEventListener('afterQueueUpdated',function(e) {
           _this._notifications = e.detail.queue;
-          _this._notificationCount = voyent.notify.getNotificationCount();
+          _this.set('_notificationCount', voyent.notify.getNotificationCount());
         });
 
         document.addEventListener('beforeQueueUpdated',function(e) {
@@ -683,6 +695,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         window.addEventListener('voyent-session-expired', function(e){
           console.log('app received event voyent-session-expired', e);
           voyent.xio.push.disconnect();
+          _this._handleLogout();
         });
 
         window.addEventListener('voyent-session-disconnected', function(e){
