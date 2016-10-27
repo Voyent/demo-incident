@@ -47,11 +47,7 @@
                 window.addEventListener("resize", function() {
                     _this.calcHeight();
                 });
-                document.addEventListener('beforeQueueUpdated',function(e) {
-                    console.log('IN LISTENER');
-                    console.log(e);
-                    e.preventDefault();
-                });
+
                 window.initializeLocationsMap = function () {
                     var start = {lat: 0, lng: 0};
                     var map = new google.maps.Map(document.getElementById('map'), {
@@ -59,7 +55,7 @@
                         center: start
                     });
                     _this.map = map;
-                    _this.updateLocations();
+                    _this.updateLocations(true);
                 };
                 if (!('google' in window) || !('maps' in window.google)) {
                     var script = document.createElement('script');
@@ -86,104 +82,136 @@
                         h -= headerHeight;
                     }
                 }
-                
-                console.log("Setting map height to " + h);
+
                 _this.set("height", h);
                 _this.customStyle['--height-var'] = h + 'px';
                 _this.updateStyles();
             },
 
             visibleChanged:function(){
-                if(this.visible){
-                    voyent.xio.push.join('trackerMove');
+                if(this.visible) {
+                    function waitForPushConnection() {
+                        if (!voyent.xio.push.connected) {
+                            setTimeout(waitForPushConnection, 100);
+                            return;
+                        }
+                        voyent.xio.push.join('trackerMove');
+                        voyent.xio.push.join('steve.maryka');
+                    }
+
+                    waitForPushConnection();
                 }
                 else{
                     voyent.xio.push.leave('trackerMove');
+                    voyent.xio.push.leave('steve.maryka');
                 }
             },
 
-            updateLocations:function(){
+            updateLocations:function(resetMap){
                 var promises = [];
                 var trackers;
                 var location;
-                if(_this.user){
-                    _this.user.setMap(null)
-                }
-                if(_this.anchor){
-                    _this.anchor.setMap(null);
-                }
-                for(var i = 0; i < _this.zones.length; i++){
-                    _this.zones[i].setMap(null);
-                }
+                _this.oldUser = _this.user;
+                _this.oldAnchor = _this.anchor;
+                _this.oldZones = _this.zones;
                 _this.zones = [];
-                promises.push(voyent.io.locate.getAllTrackers({realm:voyent.io.auth.getLastKnownRealm()}).then(function (t) {
+                promises.push(voyent.io.locate.getAllTrackers({realm:_this.realm}).then(function (t) {
                     trackers = t;
                 }));
-                promises.push(voyent.io.locate.findPOIs({realm:voyent.io.auth.getLastKnownRealm(),'query':{'label':voyent.io.auth.getLastKnownUsername()}}).then(function(l){
+
+
+                promises.push(voyent.io.locate.findLocations({realm:voyent.io.auth.getLastKnownRealm(),'query':{'username':voyent.io.auth.getLastKnownUsername()}, 'options':{"sort":{"lastUpdated":-1},"limit":1}}).then(function(l){
                     location = l[0];
                 }));
-                promises.push(voyent.io.locate.getLastUserLocation({'username':voyent.io.auth.getLastKnownUsername()}).then(function(l){
-                    console.log(voyent.io.auth.getLastKnownUsername());
-                    console.log('Found person');
-                        console.log(l)
-                    }));
+                //promises.push(voyent.io.locate.getLastUserLocation({'username':voyent.io.auth.getLastKnownUsername()}).then(function(l){
+                //    console.log(voyent.io.auth.getLastKnownUsername());
+                //    console.log('Found person');
+                //        console.log(l)
+                //    }));
                 //Use getLastUserLocation? promises.push(voyent.io.locate.getLastUserLocation)
                 return Promise.all(promises).then(function () {
-                    var bounds = new google.maps.LatLngBounds();
-                    for (var i = 0; i < trackers.length; i++) {
-                        try {
-
-                            var anchorCoords = trackers[i].anchor.geometry.coordinates;
-                            var googlePoint = new google.maps.LatLng(anchorCoords[1], anchorCoords[0]);
-                            poi = new google.maps.Marker({
-                                position: googlePoint,
-                                map: _this.map,
-                                draggable: false,
-                                zIndex: trackers[i].anchor.properties.zIndex
-                            });
-                            _this.anchor = poi;
-                            bounds.extend(googlePoint);
-                            var geoJSON = trackers[i];
-
-                            for(var j = 0; j < geoJSON.zones.features.length; j++){
-                                for (var cycle = 0; cycle < geoJSON.zones.features[j].geometry.coordinates[0].length; cycle++) {
-                                    var coords = geoJSON.zones.features[j].geometry.coordinates[0];
-                                    googlePoint = new google.maps.LatLng(coords[cycle][1], coords[cycle][0]);
-                                    bounds.extend(googlePoint);
-                                }
-                                var zone = geoJSON.zones.features[j];
-                                var metadata = zone.properties.googleMaps;
-                                var region = new google.maps.Circle({
-                                    'center': new google.maps.LatLng(metadata.center[0], metadata.center[1]),
-                                    'radius': metadata.radius,
-                                    'map': _this.map,
-                                    'editable': false,
-                                    'fillColor': zone.properties.Color,
-                                    'zIndex': metadata.zIndex
-                                });
-                                _this.zones.push(region);
-                            }
-                            if (!geoJSON.properties.zoneNamespace) {
-                                geoJSON.properties.zoneNamespace = 'default';
-                            }
-
-                        }
-                        catch (err) {
-                            this.fire('message-error', "Issue importing tracker: " + JSON.stringify(data[i]), err);
-                        }
+                    var locationPromises = [];
+                    var locations = {};
+                    for (var j = 0; j < trackers.length; j++){
+                        locationPromises.push(voyent.io.locate.getLastUserLocation({realm:_this.realm,username:trackers[j]._id}).then(function(l){
+                            locations[l.username] = l;
+                        }));
                     }
-                    googlePoint = new google.maps.LatLng(location.location.geometry.coordinates[1], location.location.geometry.coordinates[0]);
-                    var poi;
-                    poi = new google.maps.Marker({
-                        position: googlePoint,
-                        map: _this.map,
-                        draggable: false
-                    });
-                    _this.user = poi;
-                    bounds.extend(googlePoint);
+                    return Promise.all(locationPromises).then(function(){
+                        var bounds = new google.maps.LatLngBounds();
+                        if(_this.oldUser){
+                            _this.oldUser.setMap(null)
+                        }
+                        if(_this.oldAnchor){
+                            _this.oldAnchor.setMap(null);
+                        }
+                        for(var i = 0; i < _this.oldZones.length; i++){
+                            _this.oldZones[i].setMap(null);
+                        }
+                        for (var i = 0; i < trackers.length; i++) {
+                            try {
 
-                    _this.map.fitBounds(bounds);
-                    _this.map.panToBounds(bounds);
+                                var anchorCoords = trackers[i].anchor.geometry.coordinates;
+                                var googlePoint;
+                                var lastKnownTrackerLocation = locations[trackers[i]._id];
+                                if (lastKnownTrackerLocation) {
+                                    googlePoint = new google.maps.LatLng(lastKnownTrackerLocation.location.geometry.coordinates[1],
+                                            lastKnownTrackerLocation.location.geometry.coordinates[0]);
+                                }
+                                else {
+                                    googlePoint = new google.maps.LatLng(anchorCoords[1], anchorCoords[0]);
+                                }
+                                poi = new google.maps.Marker({
+                                    position: googlePoint,
+                                    map: _this.map,
+                                    draggable: false,
+                                    zIndex: trackers[i].anchor.properties.zIndex
+                                });
+                                _this.anchor = poi;
+                                bounds.extend(googlePoint);
+                                var geoJSON = trackers[i];
+
+                                for(var j = 0; j < geoJSON.zones.features.length; j++){
+
+                                    var zone = geoJSON.zones.features[j];
+                                    var metadata = zone.properties.googleMaps;
+                                    var region = new google.maps.Circle({
+                                        'center': googlePoint,
+                                        'radius': metadata.radius,
+                                        'map': _this.map,
+                                        'editable': false,
+                                        'fillColor': zone.properties.Color,
+                                        'zIndex': metadata.zIndex
+                                    });
+                                    _this.zones.push(region);
+                                }
+                                if (!geoJSON.properties.zoneNamespace) {
+                                    geoJSON.properties.zoneNamespace = 'default';
+                                }
+
+                            }
+                            catch (err) {
+                                this.fire('message-error', "Issue importing tracker: " + JSON.stringify(data[i]), err);
+                            }
+                        }
+                        googlePoint = new google.maps.LatLng(location.location.geometry.coordinates[1], location.location.geometry.coordinates[0]);
+                        var poi;
+                        poi = new google.maps.Marker({
+                            position: googlePoint,
+                            map: _this.map,
+                            draggable: false,
+                            icon: 'images/user.png'
+                        });
+                        _this.user = poi;
+                        bounds.extend(googlePoint);
+
+                        if(resetMap){
+                            _this.map.fitBounds(bounds);
+                            _this.map.panToBounds(bounds);
+                            _this.map.setZoom(_this.map.getZoom()-3);
+                        }
+                    });
+
                 })['catch'](function (error) {
                     console.log('<voyent-locations> Error: ' + ( error.message || error.responseText));
                     console.log(error);

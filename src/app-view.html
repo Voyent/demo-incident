@@ -660,6 +660,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           _this._notificationCount = voyent.notify.getNotificationCount();
         });
 
+        document.addEventListener('beforeQueueUpdated',function(e) {
+          if(e.detail.notification.subject === 'Tracker Moved'){
+            e.preventDefault();
+            if(_this.page === 'map'){
+              var routeRef = document.querySelector('map-view');
+              routeRef.updateLocations();
+            }
+          }
+        });
+
         window.addEventListener('onAfterLogin', function(){
           console.log('onAfterLogin callback: configuring notifications');
           _this._setupNotificationListener();
