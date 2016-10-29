@@ -49,6 +49,9 @@
     "bower_components/voyent-web-components/voyent-location-editor/css/trackerImage.png",
     "bower_components/voyent-web-components/common/imports/d3.html",
     "bower_components/d3/d3.min.js",
-    "bower_components/voyent-web-components/voyent-location-simulator/images/user.png"
+    "bower_components/voyent-web-components/voyent-location-simulator/images/user_bttn.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/user_marker.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/incident_bttn.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/incident_marker.png"
   ]
 }
