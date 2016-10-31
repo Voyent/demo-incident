@@ -17,9 +17,6 @@
             }
             .incidentTabs {
                 font-weight:bold;
-                margin-bottom:20px;
-            }
-            .incidentTabs paper-tabs {
                 width:210px;
             }
             .incidentTabs paper-tab {
@@ -41,32 +38,44 @@
                 </voyent-location-simulator>
             </div>
             <div class="tab-content">
-                <paper-dropdown-menu horizontal-align="left" label="Incidents:">
-                    <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
-                        <template is="dom-repeat" items="{{trackers}}">
-                            <div name="{{item.properties.zoneNamespace}}">{{item.properties.zoneNamespace}}</div>
-                        </template>
-                    </iron-selector>
-                </paper-dropdown-menu>
-                <template is="dom-if" if="{{tracker}}">
-                    <paper-dropdown-menu horizontal-align="left" label="Zones:">
-                        <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{zone}}">
-                            <template is="dom-repeat" items="{{zones}}">
-                                <div name="{{item.properties.zoneId}}">{{item.properties.zoneId}}</div>
-                            </template>
-                        </iron-selector>
-                    </paper-dropdown-menu>
-                </template>
+                <table width="100%" height="100%" cellspacing="5" cellpadding="0">
+                    <tbody>
+                        <tr>
+                            <td height="100%" valign="top" width="70%">
+                                <paper-dropdown-menu horizontal-align="left" label="Incidents:">
+                                    <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
+                                        <template is="dom-repeat" items="{{trackers}}">
+                                            <div name="{{item.properties.zoneNamespace}}">{{item.properties.zoneNamespace}}</div>
+                                        </template>
+                                    </iron-selector>
+                                </paper-dropdown-menu>
+                                <template is="dom-if" if="{{tracker}}">
+                                    <paper-dropdown-menu horizontal-align="left" label="Zones:">
+                                        <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{zone}}">
+                                            <template is="dom-repeat" items="{{zones}}">
+                                                <div name="{{item.properties.zoneId}}">{{item.properties.zoneId}}</div>
+                                            </template>
+                                        </iron-selector>
+                                    </paper-dropdown-menu>
+                                </template>
+                            </td>
+                            <td height="100%" valign="top" width="30%">
+                                <template is="dom-if" if="{{tracker}}">
+                                    <div class="incidentTabs">
+                                        <div>Icon:</div>
+                                        <paper-tabs attr-for-selected="name" selected="{{selectedIcon}}" no-bar noink>
+                                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/lightning_marker_inverted.png"><img alt="Lightning" title="Lightning" src="../images/lightning_marker.png"></paper-tab>
+                                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/tornado_marker_inverted.png"><img alt="Tornado" title="Tornado" src="../images/tornado_marker.png"></paper-tab>
+                                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/hurricane_marker_inverted.png"><img alt="Hurricane" title="Hurricane" src="../images/hurricane_marker.png"></paper-tab>
+                                        </paper-tabs>
+                                    </div>
+                                </template>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 <voyent-transport-editor id="transportEditor" simple value="{{messageTemplate}}"></voyent-transport-editor>
                 <template is="dom-if" if="{{showButtons}}">
-                    <div class="incidentTabs">
-                        <div>Icon:</div>
-                        <paper-tabs attr-for-selected="name" selected="{{selectedIcon}}" no-bar noink>
-                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/lightning_marker_inverted.png"><img alt="Lightning" title="Lightning" src="../images/lightning_marker.png"></paper-tab>
-                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/tornado_marker_inverted.png"><img alt="Tornado" title="Tornado" src="../images/tornado_marker.png"></paper-tab>
-                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/hurricane_marker_inverted.png"><img alt="Hurricane" title="Hurricane" src="../images/hurricane_marker.png"></paper-tab>
-                        </paper-tabs>
-                    </div>
                     <paper-button raised on-click="saveTemplate">Save</paper-button>
                     <template is="dom-if" if="{{showDeleteButton}}">
                         <paper-button raised on-click="deleteTemplate">Delete</paper-button>
@@ -93,7 +102,8 @@
                     observer: '_tabChanged'
                 },
                 selectedIcon: {
-                    type: String
+                    type: String,
+                    observer: '_iconChanged'
                 },
                 trackers: {
                     type: Array,
@@ -151,7 +161,6 @@
             saveTemplate: function() {
                 var _this = this;
                 var messageTemplate = JSON.parse(this.messageTemplate);
-                var updateOthers = false;
                 if (!messageTemplate ||
                     !messageTemplate.global ||
                     !messageTemplate.global.subject) {
@@ -170,7 +179,6 @@
                     //make sure we save the new icon
                     messageTemplate.global.icon = this.selectedIcon;
                     this.messageTemplate = JSON.stringify(messageTemplate);
-                    updateOthers = true;
                 }
                 var data = {};
                 data[this._getScopedPropertyName()] = messageTemplate;
@@ -185,10 +193,6 @@
                     _this.fire('message-error', 'Failed saving message template');
                     console.error('Failed saving message template',error);
                 });
-
-                if (updateOthers) {
-                   this._updateOtherZones();
-                }
             },
 
             deleteTemplate: function() {
@@ -214,6 +218,9 @@
                 this.messageTemplate = null;
                 //set the list of zones based on the selected tracker
                 this._updateZones();
+                //update the selected icon (all templates should have the same icon so just select the first one)
+                var firstZone = Object.keys(this.trackerData[this.tracker])[0];
+                this.selectedIcon = this.trackerData[this.tracker][firstZone].global.icon
             },
 
             _zoneSelected: function() {
@@ -233,47 +240,60 @@
                 this.showDeleteButton = true;
 
                 this.messageTemplate = this.trackerData[this.tracker][this.zone];
-                //update the selected icon
-                var tempObj = JSON.parse(this.messageTemplate);
-                this.selectedIcon = tempObj.global.icon;
-
                 this.fire('message-info', 'Loaded saved message template');
             },
 
             _tabChanged: function() {
+                var _this = this;
                 //update the tracker list each time the message template view is shown
                 if (this.selectedTab !== 1) {
+                    //resize the map when switching tabs
+                    setTimeout(function() {
+                        _this.$.simulator.resizeMap();
+                    },100);
                     return;
                 }
                 this._getTrackers();
             },
 
-            _updateOtherZones: function() {
-                var _this = this;
-                //update the other message templates for this tracker in case the icon changed
-                for (var zone in this.trackerData[this.tracker]) {
-                    //only update the other templates
-                    if (!this.trackerData[this.tracker].hasOwnProperty(zone) || zone === this.zone) {
-                        continue;
+            _iconChanged: function() {
+                if (this.selectedIcon) {
+                    //this func could be triggered by the tracker changing so be sure that
+                    //the icon has actually changed for this tracker before continuing
+                    //all templates should have the same icon so just select the first one
+                    var firstZone = Object.keys(this.trackerData[this.tracker])[0];
+                    if (this.selectedIcon === this.trackerData[this.tracker][firstZone].global.icon) {
+                        return; //icon hasn't changed
                     }
-                    var msgTemplate = this.trackerData[this.tracker][zone];
-                    if (msgTemplate !== null && typeof msgTemplate !== 'object') {
-                        msgTemplate = JSON.parse(msgTemplate);
+                    var _this = this;
+                    var promises = [];
+                    //update all the message templates for this tracker in case the icon changed
+                    for (var zone in this.trackerData[this.tracker]) {
+                        if (!this.trackerData[this.tracker].hasOwnProperty(zone)) {
+                            continue;
+                        }
+                        var msgTemplate = this.trackerData[this.tracker][zone];
+                        if (msgTemplate !== null && typeof msgTemplate !== 'object') {
+                            msgTemplate = JSON.parse(msgTemplate);
+                        }
+                        if (!msgTemplate.global) {
+                            msgTemplate.global = {};
+                        }
+                        msgTemplate.global.icon = this.selectedIcon;
+                        var data = {};
+                        data[this._getScopedPropertyName(zone)] =  msgTemplate;
+                        (function(zone,msgTemplate,data) {
+                            promises.push(voyent.io.scope.createRealmData({'data': data}).then(function() {
+                                _this.trackerData[_this.tracker][zone] = msgTemplate;
+                            }));
+                        })(zone,msgTemplate,data)
                     }
-                    if (!msgTemplate.global) {
-                        msgTemplate.global = {};
-                    }
-                    msgTemplate.global.icon = this.selectedIcon;
-                    var data = {};
-                    data[this._getScopedPropertyName(zone)] =  msgTemplate;
-                    (function(zone,msgTemplate,data) {
-                        voyent.io.scope.createRealmData({'data': data}).then(function() {
-                            _this.trackerData[_this.tracker][zone] = msgTemplate;
-                        }).catch(function(error) {
-                            _this.fire('message-error', 'Failed saving icon');
-                            console.error('Failed saving icon',error);
-                        });
-                    })(zone,msgTemplate,data)
+                    Promise.all(promises).then(function() {
+                        _this.fire('message-info', 'Successfully updated icon');
+                    })['catch'](function(error) {
+                        _this.fire('message-error', 'Failed saving icon');
+                        console.error('Failed saving icon',error);
+                    });
                 }
             },
 
