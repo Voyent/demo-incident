@@ -15,6 +15,19 @@
             :host {
                 display: block;
             }
+            .incidentTabs {
+                font-weight:bold;
+                margin-bottom:20px;
+            }
+            .incidentTabs paper-tabs {
+                width:210px;
+            }
+            .incidentTabs paper-tab {
+                background-color:white;
+            }
+            .incidentTabs paper-tab.iron-selected {
+                background-color: #D3D3D3;
+            }
         </style>
 
         <paper-tabs selected="{{selectedTab}}" no-bar>
@@ -46,6 +59,14 @@
                 </template>
                 <voyent-transport-editor id="transportEditor" simple value="{{messageTemplate}}"></voyent-transport-editor>
                 <template is="dom-if" if="{{showButtons}}">
+                    <div class="incidentTabs">
+                        <div>Icon:</div>
+                        <paper-tabs attr-for-selected="name" selected="{{selectedIcon}}" no-bar noink>
+                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/lightning_marker_inverted.png"><img alt="Lightning" title="Lightning" src="../images/lightning_marker.png"></paper-tab>
+                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/tornado_marker_inverted.png"><img alt="Tornado" title="Tornado" src="../images/tornado_marker.png"></paper-tab>
+                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/hurricane_marker_inverted.png"><img alt="Hurricane" title="Hurricane" src="../images/hurricane_marker.png"></paper-tab>
+                        </paper-tabs>
+                    </div>
                     <paper-button raised on-click="saveTemplate">Save</paper-button>
                     <template is="dom-if" if="{{showDeleteButton}}">
                         <paper-button raised on-click="deleteTemplate">Delete</paper-button>
@@ -70,6 +91,9 @@
                     type: Number,
                     value: 0,
                     observer: '_tabChanged'
+                },
+                selectedIcon: {
+                    type: String
                 },
                 trackers: {
                     type: Array,
@@ -127,6 +151,7 @@
             saveTemplate: function() {
                 var _this = this;
                 var messageTemplate = JSON.parse(this.messageTemplate);
+                var updateOthers = false;
                 if (!messageTemplate ||
                     !messageTemplate.global ||
                     !messageTemplate.global.subject) {
@@ -137,17 +162,17 @@
                     this.fire('message-error', 'Cannot save: Please enter a message');
                     return;
                 }
-                
-                // Clean up our messageTemplate of superfluous variables
-                if (messageTemplate.global.priority) {
-                    delete messageTemplate.global.priority;
+                if (!this.selectedIcon) {
+                    this.fire('message-error', 'Cannot save: Please select an icon');
+                    return;
                 }
-                if (messageTemplate.global.expire_time) {
-                    delete messageTemplate.global.expire_time;
+                if (messageTemplate.global.icon !== this.selectedIcon) {
+                    //make sure we save the new icon
+                    messageTemplate.global.icon = this.selectedIcon;
+                    this.messageTemplate = JSON.stringify(messageTemplate);
+                    updateOthers = true;
                 }
-                
                 var data = {};
-                //specify the property this way to selectively update the record
                 data[this._getScopedPropertyName()] = messageTemplate;
                 voyent.io.scope.createRealmData({'data': data}).then(function() {
                     if (!_this.trackerData[_this.tracker]) {
@@ -160,6 +185,10 @@
                     _this.fire('message-error', 'Failed saving message template');
                     console.error('Failed saving message template',error);
                 });
+
+                if (updateOthers) {
+                   this._updateOtherZones();
+                }
             },
 
             deleteTemplate: function() {
@@ -204,6 +233,10 @@
                 this.showDeleteButton = true;
 
                 this.messageTemplate = this.trackerData[this.tracker][this.zone];
+                //update the selected icon
+                var tempObj = JSON.parse(this.messageTemplate);
+                this.selectedIcon = tempObj.global.icon;
+
                 this.fire('message-info', 'Loaded saved message template');
             },
 
@@ -215,8 +248,37 @@
                 this._getTrackers();
             },
 
-            _getScopedPropertyName: function() {
-                return this._dataProperty+'.'+this.tracker+'.'+this.zone;
+            _updateOtherZones: function() {
+                var _this = this;
+                //update the other message templates for this tracker in case the icon changed
+                for (var zone in this.trackerData[this.tracker]) {
+                    //only update the other templates
+                    if (!this.trackerData[this.tracker].hasOwnProperty(zone) || zone === this.zone) {
+                        continue;
+                    }
+                    var msgTemplate = this.trackerData[this.tracker][zone];
+                    if (msgTemplate !== null && typeof msgTemplate !== 'object') {
+                        msgTemplate = JSON.parse(msgTemplate);
+                    }
+                    if (!msgTemplate.global) {
+                        msgTemplate.global = {};
+                    }
+                    msgTemplate.global.icon = this.selectedIcon;
+                    var data = {};
+                    data[this._getScopedPropertyName(zone)] =  msgTemplate;
+                    (function(zone,msgTemplate,data) {
+                        voyent.io.scope.createRealmData({'data': data}).then(function() {
+                            _this.trackerData[_this.tracker][zone] = msgTemplate;
+                        }).catch(function(error) {
+                            _this.fire('message-error', 'Failed saving icon');
+                            console.error('Failed saving icon',error);
+                        });
+                    })(zone,msgTemplate,data)
+                }
+            },
+
+            _getScopedPropertyName: function(zone) {
+                return this._dataProperty+'.'+this.tracker+'.'+(zone?zone:this.zone);
             },
 
             _getTrackers: function() {
@@ -266,7 +328,7 @@
                         _this.$.simulator.resizeMap();
                     },500);
                 }
-            },
+            }
         });
     </script>
 </dom-module>
