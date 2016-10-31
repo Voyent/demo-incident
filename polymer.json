@@ -52,6 +52,9 @@
     "bower_components/voyent-web-components/voyent-location-simulator/images/user_bttn.png",
     "bower_components/voyent-web-components/voyent-location-simulator/images/user_marker.png",
     "bower_components/voyent-web-components/voyent-location-simulator/images/incident_bttn.png",
-    "bower_components/voyent-web-components/voyent-location-simulator/images/incident_marker.png"
+    "bower_components/voyent-web-components/voyent-location-simulator/images/incident_marker.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/lightning_marker.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/tornado_marker.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/hurricane_marker.png"
   ]
 }
