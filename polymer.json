@@ -12,8 +12,7 @@
     "src/logs-view.html",
     "src/map-view.html",
     "src/notifications-view.html",
-    "src/queries-view.html",
-    "src/users-view.html"
+    "src/queries-view.html"
   ],
   "sourceGlobs": [
    "src/**/*",
