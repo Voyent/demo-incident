@@ -93,8 +93,7 @@
                 },
                 selectedTab: {
                     type: Number,
-                    value: 0,
-                    observer: '_tabChanged'
+                    value: 0
                 },
                 selectedIcon: {
                     type: String,
@@ -236,19 +235,6 @@
 
                 this.messageTemplate = this.trackerData[this.tracker][this.zone];
                 this.fire('message-info', 'Loaded saved message template');
-            },
-
-            _tabChanged: function() {
-                var _this = this;
-                //update the tracker list each time the message template view is shown
-                if (this.selectedTab !== 1) {
-                    //resize the map when switching tabs
-                    setTimeout(function() {
-                        _this.$.simulator.resizeMap();
-                    },100);
-                    return;
-                }
-                this._getTrackers();
             },
 
             _iconChanged: function() {
