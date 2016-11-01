@@ -45,7 +45,7 @@
                                 <paper-dropdown-menu horizontal-align="left" label="Incidents:">
                                     <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
                                         <template is="dom-repeat" items="{{trackers}}">
-                                            <div name="{{item.properties.zoneNamespace}}">{{item.properties.zoneNamespace}}</div>
+                                            <div name="{{item._id}}">{{_getTrackerLabel(item)}}</div>
                                         </template>
                                     </iron-selector>
                                 </paper-dropdown-menu>
@@ -186,7 +186,7 @@
                     if (!_this.trackerData[_this.tracker]) {
                         _this.trackerData[_this.tracker] = {};
                     }
-                    _this.trackerData[_this.tracker][_this.zone] = _this.messageTemplate;
+                    _this.trackerData[_this.tracker][_this.zone] = messageTemplate;
                     _this.showDeleteButton = true;
                     _this.fire('message-info', 'Successfully saved message template');
                 }).catch(function(error) {
@@ -319,7 +319,7 @@
             _updateZones: function() {
                 for (var i=0; i<this.trackers.length; i++) {
                     //check if the selected tracker exists
-                    if (this.tracker === this.trackers[i].properties.zoneNamespace) {
+                    if (this.tracker === this.trackers[i]._id) {
                         this.zones = this.trackers[i].zones.features;
                         //check if the selected zone exists
                         if (this.zone) {
@@ -339,6 +339,10 @@
                 this.tracker = null;
                 this.zone = null;
                 this.zones = null;
+            },
+
+            _getTrackerLabel: function(tracker) {
+                return tracker.label || tracker._id;
             },
 
             _visibleChanged: function(visible) {
