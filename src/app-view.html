@@ -248,10 +248,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <iron-icon icon="home"></iron-icon>
                 <span>Home</span>
               </a>
-              <a name="users" href="#/users" title="Setup and manage various users of the system">
-                <iron-icon icon="perm-identity"></iron-icon>
-                <span>Users</span>
-              </a>
               <a name="notifications" href="#/notifications" title="View the queue of notifications">
                 <iron-icon icon="announcement"></iron-icon>
                 <template is="dom-if" if="{{_hasLargeNotificationCount(_notificationCount)}}">
@@ -347,7 +343,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </template>
                 <template is="dom-if" if="{{!isDashboard}}">
                     <home-view name="home" visible="{{_isEqual('home', page)}}"></home-view>
-                    <users-view name="users" visible="{{_isEqual('users', page)}}" users="[[_users]]"></users-view>
                     <notifications-view name="notifications" visible="{{_isEqual('notifications', page)}}" notifications="[[_notifications]]" users="[[_users]]"></notifications-view>
                     <incident-view name="incident" visible="{{_isEqual('incident', page)}}"></incident-view>
                     <dashboard-view name="dashboard" visible="{{_isEqual('dashboard', page)}}"></dashboard-view>
