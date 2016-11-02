@@ -199,11 +199,7 @@
                 // This is because a lot of heavy lifting is done in attitudeChanged
                 // And if the user clicks 'Save' without changing the attitude this could result in data not being saved
                 if (this.selectedAttitude && this.selectedAttitude !== null) {
-                    for (var att in this.availableAttitudes) {
-                        if (this.selectedAttitude === this.availableAttitudes[att]) {
-                            this.trackerData[this.tracker][this.zone][this.selectedAttitude] = JSON.parse(JSON.stringify(this.messageTemplate.global));
-                        }
-                    }
+                    this._updateTrackerWithAttitude(this.selectedAttitude);
                 }
                 
                 // Ensure global, increase, and decrease have the selected icon applied to their data
@@ -272,7 +268,7 @@
                 
                 // If we only have a single zone then autoselect it
                 if (this.zones && this.zones.length === 1) {
-                    this.set('zone', this.zones[0]);
+                    this.set('zone', this.zones[0].properties.zoneId);
                 }
             },
 
@@ -304,11 +300,7 @@
                     // First we want to store the messageTemplate under our trackerData for the value we're changing from
                     // Basically we save our messageTemplate to the proper spot in trackerData
                     if (oldValue && oldValue !== null) {
-                        for (var att in this.availableAttitudes) {
-                            if (oldValue === this.availableAttitudes[att]) {
-                                this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]] = JSON.parse(JSON.stringify(this.messageTemplate.global));
-                            }
-                        }
+                        this._updateTrackerWithAttitude(oldValue);
                     }
                     
                     // Next we use the new value, which has been set into selectedAttitude already, and set the message template
@@ -321,6 +313,23 @@
                             else {
                                 this.messageTemplate = null;
                             }
+                        }
+                    }
+                }
+            },
+            
+            _updateTrackerWithAttitude: function(attitude) {
+                // First we want to store the messageTemplate under our trackerData for the passed attitude
+                // Basically we save our messageTemplate to the proper spot in trackerData
+                // Note this will not save anything (and will in fact remove the attitude) if the messageTemplate has no subject or details
+                for (var att in this.availableAttitudes) {
+                    if (attitude === this.availableAttitudes[att]) {
+                        if ((this.messageTemplate.global.hasOwnProperty('subject') && this.messageTemplate.global.subject && this.messageTemplate.global.subject !== null && this.messageTemplate.global.subject.trim() != '') &&
+                            (this.messageTemplate.global.hasOwnProperty('details') && this.messageTemplate.global.details && this.messageTemplate.global.details !== null && this.messageTemplate.global.details.trim() != '')) {
+                            this.trackerData[this.tracker][this.zone][attitude] = JSON.parse(JSON.stringify(this.messageTemplate.global));
+                        }
+                        else {
+                            delete this.trackerData[this.tracker][this.zone][attitude];
                         }
                     }
                 }
