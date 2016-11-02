@@ -119,7 +119,6 @@
                 },
                 selectedAttitude: {
                     type: String,
-                    value: 'global',
                     observer: '_attitudeChanged'
                 },
                 trackers: {
@@ -164,6 +163,8 @@
                 //fetch all the trackers for the realm so we can populate the UI
                 this._getTrackers();
                 
+                // Set our initial attitude state
+                this.selectedAttitude = this.availableAttitudes[0];
                 this.defaultSelectedAttitude = this.selectedAttitude;
                 
                 //fetch tracker data that contains associated message templates
