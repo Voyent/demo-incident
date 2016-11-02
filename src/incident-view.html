@@ -341,12 +341,12 @@
                     //the icon has actually changed for this tracker before continuing
                     //all templates should have the same icon so just select the first one
                     var firstZone = Object.keys(this.trackerData[this.tracker])[0];
-                    if (this.selectedIcon === this.trackerData[this.tracker][firstZone].global.icon) {
+                    if (this.trackerData[this.tracker][firstZone].hasOwnProperty('global') && this.selectedIcon === this.trackerData[this.tracker][firstZone].global.icon) {
                         return; //icon hasn't changed
                     }
                     var _this = this;
                     var promises = [];
-                    //update all the message templates for this tracker in case the icon changed
+                    //update all the message templates for all zones in this tracker in case the icon changed
                     for (var zone in this.trackerData[this.tracker]) {
                         if (!this.trackerData[this.tracker].hasOwnProperty(zone)) {
                             continue;
@@ -355,17 +355,26 @@
                         if (msgTemplate !== null && typeof msgTemplate !== 'object') {
                             msgTemplate = JSON.parse(msgTemplate);
                         }
-                        if (!msgTemplate.global) {
-                            msgTemplate.global = {};
+                        
+                        var worthSaving = false;
+                        for (var att in this.availableAttitudes) {
+                            if (msgTemplate.hasOwnProperty(this.availableAttitudes[att])) {
+                                if (msgTemplate[this.availableAttitudes[att]].hasOwnProperty('icon') && msgTemplate[this.availableAttitudes[att]].icon !== this.selectedIcon) {
+                                    msgTemplate[this.availableAttitudes[att]].icon = this.selectedIcon;
+                                    worthSaving = true;
+                                }
+                            }
                         }
-                        msgTemplate.global.icon = this.selectedIcon;
-                        var data = {};
-                        data[this._getScopedPropertyName(zone)] =  msgTemplate;
-                        (function(zone,msgTemplate,data) {
-                            promises.push(voyent.io.scope.createRealmData({'data': data}).then(function() {
-                                _this.trackerData[_this.tracker][zone] = msgTemplate;
-                            }));
-                        })(zone,msgTemplate,data)
+                        
+                        if (worthSaving) {
+                            var data = {};
+                            data[this._getScopedPropertyName(zone)] =  msgTemplate;
+                            (function(zone,msgTemplate,data) {
+                                promises.push(voyent.io.scope.createRealmData({'data': data}).then(function() {
+                                    _this.trackerData[_this.tracker][zone] = msgTemplate;
+                                }));
+                            })(zone,msgTemplate,data)
+                        }
                     }
                     Promise.all(promises).then(function() {
                         _this.fire('message-info', 'Successfully updated icon');
