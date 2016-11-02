@@ -38,7 +38,24 @@
             },
             
             ready: function() {
+                var _this = this;
                 this.scopeSubtree(this.$.simulator, true);
+
+                //the simulator map is initializing at coordinates [0,180] but this issue is isolated to this
+                //application so for now we'll use a hacky timeout to re-set the map center a short time after
+                //the map is initialized so that the map initializes as expected over Calgary
+                function waitForMap() {
+                    if (!_this.$.simulator._map) {
+                        setTimeout(function() {
+                            waitForMap();
+                        },100);
+                        return;
+                    }
+                    setTimeout(function() {
+                        _this.$.simulator._map.setCenter(new google.maps.LatLng(51.08427,-114.13062));
+                    },500);
+                }
+                waitForMap();
             },
 
             _visibleChanged: function(visible) {
