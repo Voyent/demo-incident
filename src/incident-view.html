@@ -78,7 +78,7 @@
                 <div class="radioWrap">
                     <b>Attitude:</b>
                     <paper-radio-group selected="{{selectedAttitude}}">
-                        <paper-radio-button name="none">N/A</paper-radio-button>
+                        <paper-radio-button name="global">Both</paper-radio-button>
                         <paper-radio-button name="increase">Increase</paper-radio-button>
                         <paper-radio-button name="decrease">Decrease</paper-radio-button>
                     </paper-radio-group>
@@ -104,6 +104,11 @@
                     type: Boolean,
                     value: false
                 },
+                availableAttitudes: {
+                    type: Array,
+                    value: [ "global", "increase", "decrease" ],
+                    readOnly: true
+                },
                 selectedTab: {
                     type: Number,
                     value: 0
@@ -114,7 +119,8 @@
                 },
                 selectedAttitude: {
                     type: String,
-                    value: 'none'
+                    value: 'global',
+                    observer: '_attitudeChanged'
                 },
                 trackers: {
                     type: Array,
@@ -158,6 +164,8 @@
                 //fetch all the trackers for the realm so we can populate the UI
                 this._getTrackers();
                 
+                this.defaultSelectedAttitude = this.selectedAttitude;
+                
                 //fetch tracker data that contains associated message templates
                 voyent.io.scope.getRealmData({'property': this._dataProperty}).then(function(data) {
                     _this.trackerData = data;
@@ -171,15 +179,14 @@
 
             saveTemplate: function() {
                 var _this = this;
-                var messageTemplate = JSON.parse(this.messageTemplate);
                 // Validate our template, subject, details, and icon to ensure all are present
-                if (!messageTemplate ||
-                    !messageTemplate.global ||
-                    !messageTemplate.global.subject) {
+                if (!this.messageTemplate ||
+                    !this.messageTemplate.global ||
+                    !this.messageTemplate.global.subject) {
                     this.fire('message-error', 'Cannot save: Please enter a subject');
                     return;
                 }
-                if (!messageTemplate.global.details) {
+                if (!this.messageTemplate.global.details) {
                     this.fire('message-error', 'Cannot save: Please enter a message');
                     return;
                 }
@@ -188,24 +195,30 @@
                     return;
                 }
                 
-                // Make sure we save the new icon
-                if (messageTemplate.global.icon !== this.selectedIcon) {
-                    messageTemplate.global.icon = this.selectedIcon;
-                    this.messageTemplate = JSON.stringify(messageTemplate);
+                // Ensure we persist our current message template
+                // This is because a lot of heavy lifting is done in attitudeChanged
+                // And if the user clicks 'Save' without changing the attitude this could result in data not being saved
+                if (this.selectedAttitude && this.selectedAttitude !== null) {
+                    for (var att in this.availableAttitudes) {
+                        if (this.selectedAttitude === this.availableAttitudes[att]) {
+                            this.trackerData[this.tracker][this.zone][this.selectedAttitude] = JSON.parse(JSON.stringify(this.messageTemplate.global));
+                        }
+                    }
                 }
                 
-                // Set our attitude, which is a custom property
-                if ((this.selectedAttitude) && (this.selectedAttitude !== 'none')) {
-                    messageTemplate.global.attitude = this.selectedAttitude;
+                // Ensure global, increase, and decrease have the selected icon applied to their data
+                for (var att in this.availableAttitudes) {
+                    if (this.trackerData[this.tracker][this.zone].hasOwnProperty(this.availableAttitudes[att])) {
+                        this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]].icon = this.selectedIcon;
+                    }
                 }
                 
                 var data = {};
-                data[this._getScopedPropertyName()] = messageTemplate;
+                data[this._getScopedPropertyName()] = this.trackerData[this.tracker][this.zone];
                 voyent.io.scope.createRealmData({'data': data}).then(function() {
                     if (!_this.trackerData[_this.tracker]) {
                         _this.trackerData[_this.tracker] = {};
                     }
-                    _this.trackerData[_this.tracker][_this.zone] = messageTemplate;
                     _this.showDeleteButton = true;
                     _this.fire('message-info', 'Successfully saved message template');
                 }).catch(function(error) {
@@ -219,6 +232,7 @@
                 voyent.io.scope.deleteRealmData({'property':this._getScopedPropertyName()}).then(function() {
                     _this.messageTemplate = null;
                     delete _this.trackerData[_this.tracker][_this.zone];
+                    _this.setDefaultAttitude();
                     _this.showDeleteButton = false;
                     _this.fire('message-info', 'Successfully deleted message template');
                 }).catch(function(error) {
@@ -228,19 +242,38 @@
             },
 
             clearTemplate: function() {
-                this.set('selectedAttitude', 'none');
+                this.setDefaultAttitude();
                 this.$.transportEditor.resetSimple();
+            },
+            
+            setDefaultAttitude: function(forceChange) {
+                // If we want to force a change rever to null first, THEN set our attitude
+                // Otherwise the observer won't be fired if we're already set to defaultSelectedAttitude
+                if (forceChange) {
+                    this.set('selectedAttitude', null);
+                }
+                this.set('selectedAttitude', this.defaultSelectedAttitude);
             },
 
             _trackerUpdated: function(tracker) {
                 //reset the zone and any loaded message template
                 this.zone = null;
                 this.messageTemplate = null;
+                this.setDefaultAttitude();
+                
                 //set the list of zones based on the selected tracker
                 this._updateZones();
+                
                 //update the selected icon (all templates should have the same icon so just select the first one)
-                var firstZone = Object.keys(this.trackerData[this.tracker])[0];
-                this.selectedIcon = this.trackerData[this.tracker][firstZone].global.icon
+                if (this.tracker && this.trackerData[this.tracker]) {
+                    var firstZone = Object.keys(this.trackerData[this.tracker])[0];
+                    this.selectedIcon = this.trackerData[this.tracker][firstZone].global.icon
+                }
+                
+                // If we only have a single zone then autoselect it
+                if (this.zones && this.zones.length === 1) {
+                    this.set('zone', this.zones[0]);
+                }
             },
 
             _zoneSelected: function() {
@@ -259,18 +292,38 @@
                 }
                 this.showDeleteButton = true;
 
-                this.messageTemplate = this.trackerData[this.tracker][this.zone];
-                
-                // Check for an attitude
-                if ((this.trackerData[this.tracker][this.zone].hasOwnProperty('global')) &&
-                    (this.trackerData[this.tracker][this.zone].global.hasOwnProperty('attitude'))) {
-                    this.set('selectedAttitude', this.trackerData[this.tracker][this.zone].global.attitude);
-                }
-                else {
-                    this.set('selectedAttitude', 'none');
-                }
+                // Set to Both attitudes (global) by default
+                // This will also update our message template thanks to the observer on selectedAttitude
+                this.setDefaultAttitude(true);
                 
                 this.fire('message-info', 'Loaded saved message template');
+            },
+            
+            _attitudeChanged: function(newValue, oldValue) {
+                if (this.selectedAttitude && this.trackerData && this.tracker && this.zone) {
+                    // First we want to store the messageTemplate under our trackerData for the value we're changing from
+                    // Basically we save our messageTemplate to the proper spot in trackerData
+                    if (oldValue && oldValue !== null) {
+                        for (var att in this.availableAttitudes) {
+                            if (oldValue === this.availableAttitudes[att]) {
+                                this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]] = JSON.parse(JSON.stringify(this.messageTemplate.global));
+                            }
+                        }
+                    }
+                    
+                    // Next we use the new value, which has been set into selectedAttitude already, and set the message template
+                    // Basically we load our messageTemplate from the stored trackerData
+                    for (var att in this.availableAttitudes) {
+                        if (this.selectedAttitude === this.availableAttitudes[att]) {
+                            if (this.trackerData[this.tracker][this.zone].hasOwnProperty(this.availableAttitudes[att])) {
+                                this.messageTemplate = { "global": this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]] };
+                            }
+                            else {
+                                this.messageTemplate = null;
+                            }
+                        }
+                    }
+                }
             },
             
             _iconChanged: function() {
@@ -321,7 +374,7 @@
             _getTrackers: function() {
                 var _this = this;
                 voyent.io.locate.getAllTrackers({}).then(function(trackers) {
-                    _this.trackers = trackers;
+                    _this.set('trackers', trackers);
                     if (_this.tracker) {
                         _this._updateZones();
                     }
