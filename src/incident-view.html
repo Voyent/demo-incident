@@ -79,9 +79,8 @@
                     </tbody>
                 </table>
                 <div class="radioWrap">
-                    <b>Attitude:</b>
+                    <b>Alarm Level:</b><!-- Attitude -->
                     <paper-radio-group selected="{{selectedAttitude}}">
-                        <paper-radio-button name="global">Both</paper-radio-button>
                         <paper-radio-button name="increase">Increase</paper-radio-button>
                         <paper-radio-button name="decrease">Decrease</paper-radio-button>
                     </paper-radio-group>
@@ -109,7 +108,7 @@
                 },
                 availableAttitudes: {
                     type: Array,
-                    value: [ "global", "increase", "decrease" ],
+                    value: [ "increase", "decrease", "global" ],
                     readOnly: true
                 },
                 selectedTab: {
@@ -206,7 +205,7 @@
                     this._updateTrackerWithAttitude(this.selectedAttitude);
                 }
                 
-                // Ensure global, increase, and decrease have the selected icon applied to their data
+                // Ensure increase and decrease have the selected icon applied to their data
                 for (var att in this.availableAttitudes) {
                     if (this.trackerData[this.tracker][this.zone].hasOwnProperty(this.availableAttitudes[att])) {
                         this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]].icon = this.selectedIcon;
@@ -292,7 +291,6 @@
                 }
                 this.showDeleteButton = true;
 
-                // Set to Both attitudes (global) by default
                 // This will also update our message template thanks to the observer on selectedAttitude
                 this.setDefaultAttitude(true);
                 
