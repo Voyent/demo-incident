@@ -96,15 +96,17 @@
                         </tbody>
                     </table>
                 </template>
-                <div class="radioWrap">
-                    <b>Alarm Level:</b><!-- Attitude -->
-                    <paper-radio-group selected="{{selectedAttitude}}">
-                        <paper-radio-button name="increase">Increase</paper-radio-button>
-                        <paper-radio-button name="decrease">Decrease</paper-radio-button>
-                    </paper-radio-group>
-                </div>
-                <voyent-transport-editor id="transportEditor" simple value="{{messageTemplate}}"></voyent-transport-editor>
-                <template is="dom-if" if="{{showButtons}}">
+                <template is="dom-if" if="{{showEditor}}">
+                    <div class="radioWrap">
+                        <b>Alarm Level:</b><!-- Attitude -->
+                        <paper-radio-group selected="{{selectedAttitude}}">
+                            <paper-radio-button name="increase">Increase</paper-radio-button>
+                            <paper-radio-button name="decrease">Decrease</paper-radio-button>
+                        </paper-radio-group>
+                    </div>
+                    
+                    <voyent-transport-editor id="transportEditor" simple value="{{messageTemplate}}"></voyent-transport-editor>
+                    
                     <paper-button raised on-click="saveTemplate">Save</paper-button>
                     <template is="dom-if" if="{{showDeleteButton}}">
                         <paper-button raised on-click="deleteTemplate">Delete</paper-button>
@@ -165,7 +167,7 @@
                 messageTemplate: {
                     type: String
                 },
-                showButtons: {
+                showEditor: {
                     type: Boolean,
                     value: false
                 },
@@ -261,7 +263,9 @@
 
             clearTemplate: function() {
                 this.setDefaultAttitude();
-                this.$.transportEditor.resetSimple();
+                if (this.$$('#transportEditor')) {
+                    this.$$('#transportEditor').resetSimple();
+                }
             },
             
             setDefaultAttitude: function(forceChange) {
@@ -303,11 +307,11 @@
 
             _zoneSelected: function() {
                 if (!this.tracker || !this.zone) {
-                    this.showButtons = false;
+                    this.showEditor = false;
                     return;
                 }
                 this.messageTemplate = null;
-                this.showButtons = true;
+                this.showEditor = true;
                 //try and load message template from trackerData
                 if (!this.trackerData[this.tracker] ||
                     !this.trackerData[this.tracker][this.zone]) {
