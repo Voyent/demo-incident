@@ -31,6 +31,19 @@
             .radioWrap {
                 padding: 5px;
             }
+            @-webkit-keyframes flash {
+                0%, 50%, 100% {opacity: 1;}
+                25%, 75% {opacity: 0;}
+            }
+            @keyframes flash {
+                0%, 50%, 100% {opacity: 1;}
+                25%, 75% {opacity: 0;}
+            }
+            .flash {
+                -webkit-animation: flash 3s 100ms infinite;
+                animation: flash 3s 600ms infinite;
+                padding: 20px 10px 10px 10px;
+            }
         </style>
         
         <paper-tabs selected="{{selectedTab}}" no-bar>
@@ -42,42 +55,47 @@
                 <voyent-location-editor hidedraw hideplaces hidesearch hideimport autoheight="0.8"></voyent-location-editor>
             </div>
             <div class="tab-content" style="padding: 10px;">
-                <table width="100%" height="100%" cellspacing="5" cellpadding="0">
-                    <tbody>
-                        <tr>
-                            <td height="100%" valign="top" width="70%">
-                                <paper-dropdown-menu horizontal-align="left" label="Incidents:">
-                                    <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
-                                        <template is="dom-repeat" items="{{trackers}}">
-                                            <div name="{{item._id}}">{{_getTrackerLabel(item)}}</div>
-                                        </template>
-                                    </iron-selector>
-                                </paper-dropdown-menu>
-                                <template is="dom-if" if="{{tracker}}">
-                                    <paper-dropdown-menu horizontal-align="left" label="Zones:">
-                                        <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{zone}}">
-                                            <template is="dom-repeat" items="{{zones}}">
-                                                <div name="{{item.properties.zoneId}}">{{item.properties.zoneId}}</div>
+                <template is="dom-if" if="[[loadingTrackers]]">
+                    <div class="flash">Loading incidents and zones...</div>
+                </template>
+                <template is="dom-if" if="[[!loadingTrackers]]">
+                    <table width="100%" height="100%" cellspacing="5" cellpadding="0">
+                        <tbody>
+                            <tr>
+                                <td height="100%" valign="top" width="70%">
+                                    <paper-dropdown-menu horizontal-align="left" label="Incidents:">
+                                        <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{tracker}}">
+                                            <template is="dom-repeat" items="{{trackers}}">
+                                                <div name="{{item._id}}">{{_getTrackerLabel(item)}}</div>
                                             </template>
                                         </iron-selector>
                                     </paper-dropdown-menu>
-                                </template>
-                            </td>
-                            <td height="100%" valign="top" width="30%">
-                                <template is="dom-if" if="{{tracker}}">
-                                    <div class="incidentTabs">
-                                        <div>Icon:</div>
-                                        <paper-tabs attr-for-selected="name" selected="{{selectedIcon}}" no-bar noink>
-                                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/lightning_marker_inverted.png"><img alt="Lightning" title="Lightning" src="../images/lightning_marker.png"></paper-tab>
-                                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/tornado_marker_inverted.png"><img alt="Tornado" title="Tornado" src="../images/tornado_marker.png"></paper-tab>
-                                            <paper-tab name="http://dev.voyent.cloud/demos/incident/images/hurricane_marker_inverted.png"><img alt="Hurricane" title="Hurricane" src="../images/hurricane_marker.png"></paper-tab>
-                                        </paper-tabs>
-                                    </div>
-                                </template>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                    <template is="dom-if" if="{{tracker}}">
+                                        <paper-dropdown-menu horizontal-align="left" label="Zones:">
+                                            <iron-selector class="dropdown-content" attr-for-selected="name" selected="{{zone}}">
+                                                <template is="dom-repeat" items="{{zones}}">
+                                                    <div name="{{item.properties.zoneId}}">{{item.properties.zoneId}}</div>
+                                                </template>
+                                            </iron-selector>
+                                        </paper-dropdown-menu>
+                                    </template>
+                                </td>
+                                <td height="100%" valign="top" width="30%">
+                                    <template is="dom-if" if="{{tracker}}">
+                                        <div class="incidentTabs">
+                                            <div>Icon:</div>
+                                            <paper-tabs attr-for-selected="name" selected="{{selectedIcon}}" no-bar noink>
+                                                <paper-tab name="http://dev.voyent.cloud/demos/incident/images/lightning_marker_inverted.png"><img alt="Lightning" title="Lightning" src="../images/lightning_marker.png"></paper-tab>
+                                                <paper-tab name="http://dev.voyent.cloud/demos/incident/images/tornado_marker_inverted.png"><img alt="Tornado" title="Tornado" src="../images/tornado_marker.png"></paper-tab>
+                                                <paper-tab name="http://dev.voyent.cloud/demos/incident/images/hurricane_marker_inverted.png"><img alt="Hurricane" title="Hurricane" src="../images/hurricane_marker.png"></paper-tab>
+                                            </paper-tabs>
+                                        </div>
+                                    </template>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </template>
                 <div class="radioWrap">
                     <b>Alarm Level:</b><!-- Attitude -->
                     <paper-radio-group selected="{{selectedAttitude}}">
@@ -267,7 +285,14 @@
                 //update the selected icon (all templates should have the same icon so just select the first one)
                 if (this.tracker && this.trackerData[this.tracker]) {
                     var firstZone = Object.keys(this.trackerData[this.tracker])[0];
-                    this.selectedIcon = this.trackerData[this.tracker][firstZone].global.icon
+                    
+                    // Loop through all possible attitudes until we find a valid one, then grab the icon from that
+                    for (var att in this.availableAttitudes) {
+                        if (this.trackerData[this.tracker][firstZone].hasOwnProperty(this.availableAttitudes[att])) {
+                            this.selectedIcon = this.trackerData[this.tracker][firstZone][this.availableAttitudes[att]].icon;
+                            break;
+                        }
+                    }
                 }
                 
                 // If we only have a single zone then autoselect it
@@ -310,11 +335,12 @@
                     // Basically we load our messageTemplate from the stored trackerData
                     for (var att in this.availableAttitudes) {
                         if (this.selectedAttitude === this.availableAttitudes[att]) {
-                            if (this.trackerData[this.tracker][this.zone].hasOwnProperty(this.availableAttitudes[att])) {
-                                this.messageTemplate = { "global": this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]] };
+                            if (this.trackerData[this.tracker] && this.trackerData[this.tracker][this.zone] &&
+                                this.trackerData[this.tracker][this.zone].hasOwnProperty(this.availableAttitudes[att])) {
+                                this.set('messageTemplate', { "global": this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]] });
                             }
                             else {
-                                this.messageTemplate = null;
+                                this.set('messageTemplate', null);
                             }
                         }
                     }
@@ -325,14 +351,24 @@
                 // First we want to store the messageTemplate under our trackerData for the passed attitude
                 // Basically we save our messageTemplate to the proper spot in trackerData
                 // Note this will not save anything (and will in fact remove the attitude) if the messageTemplate has no subject or details
-                for (var att in this.availableAttitudes) {
-                    if (attitude === this.availableAttitudes[att]) {
-                        if ((this.messageTemplate.global.hasOwnProperty('subject') && this.messageTemplate.global.subject && this.messageTemplate.global.subject !== null && this.messageTemplate.global.subject.trim() != '') &&
-                            (this.messageTemplate.global.hasOwnProperty('details') && this.messageTemplate.global.details && this.messageTemplate.global.details !== null && this.messageTemplate.global.details.trim() != '')) {
-                            this.trackerData[this.tracker][this.zone][attitude] = JSON.parse(JSON.stringify(this.messageTemplate.global));
-                        }
-                        else {
-                            delete this.trackerData[this.tracker][this.zone][attitude];
+                if (this.tracker && this.zone) {
+                    // Ensure we have tracker data, otherwise create
+                    if (!this.trackerData[this.tracker]) {
+                        this.trackerData[this.tracker] = {};
+                    }
+                    if (!this.trackerData[this.tracker][this.zone]) {
+                        this.trackerData[this.tracker][this.zone] = {};
+                    }
+                
+                    for (var att in this.availableAttitudes) {
+                        if (attitude === this.availableAttitudes[att]) {
+                            if ((this.messageTemplate.global.hasOwnProperty('subject') && this.messageTemplate.global.subject && this.messageTemplate.global.subject !== null && this.messageTemplate.global.subject.trim() != '') &&
+                                (this.messageTemplate.global.hasOwnProperty('details') && this.messageTemplate.global.details && this.messageTemplate.global.details !== null && this.messageTemplate.global.details.trim() != '')) {
+                                this.trackerData[this.tracker][this.zone][attitude] = JSON.parse(JSON.stringify(this.messageTemplate.global));
+                            }
+                            else {
+                                delete this.trackerData[this.tracker][this.zone][attitude];
+                            }
                         }
                     }
                 }
@@ -404,13 +440,19 @@
             },
 
             _getTrackers: function() {
+                this.loadingTrackers = true;
+                
                 var _this = this;
                 voyent.io.locate.getAllTrackers({}).then(function(trackers) {
                     _this.set('trackers', trackers);
                     if (_this.tracker) {
                         _this._updateZones();
                     }
+                    
+                    _this.loadingTrackers = false;
                 }).catch(function(error) {
+                    _this.loadingTrackers = false;
+                
                     if (error.status !== 404) {
                         _this.fire('message-error', 'Failed retrieving trackers');
                         console.error('Failed retrieving trackers:',error);
