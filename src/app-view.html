@@ -671,9 +671,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         document.addEventListener('beforeQueueUpdated',function(e) {
           if (!_this.isAdmin && e.detail.notification.subject === 'Tracker Moved') {
             e.preventDefault();
-            if(_this.page === 'map'){
+            if (_this.page === 'map') {
               var routeRef = document.querySelector('map-view');
-              routeRef.moveLocations(e);
+              routeRef.notificationReceived(e);
             }
           }
         });

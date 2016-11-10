@@ -1,6 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="shared-styles.html">
-
 <dom-module id="map-view">
     <template>
         <style include="shared-styles">
@@ -18,44 +17,46 @@
     </template>
 
     <script>
-        var _this;
         Polymer({
             is: 'map-view',
-            
+
             properties: {
                 visible: {
                     type: Boolean,
                     value: false,
-                    observer: 'visibleChanged'
+                    observer: '_visibleChanged'
                 },
-                height: { type: Number,
-                    value: 500,
-                    notify: true
+                height: {
+                    type: Number,
+                    value: 500
                 },
-                zones: {
-                    type:Array,
-                    value:[]
-                },
-                user: {type:Object},
-                trackers: {type:Object}
+                duration: { //how long to move after receiving a tracker move notification (minutes)
+                    type: Number,
+                    value: 1,
+                    readonly: true
+                }
             },
-            
+
+            attached: function() {
+                this._calcHeight();
+            },
+
             ready: function() {
-                _this = this;
-                _this.customStyle['--height-var'] = _this.height + 'px';
-                _this.updateStyles();
+                var _this = this;
+                this.trackerInstances = {};
+                this.customStyle['--height-var'] = _this.height + 'px';
+                this.updateStyles();
                 window.addEventListener("resize", function() {
-                    _this.calcHeight();
+                    _this._calcHeight();
                 });
 
                 window.initializeLocationsMap = function () {
-                    var start = {lat: 0, lng: 0};
-                    var map = new google.maps.Map(document.getElementById('map'), {
+                    _this.map = new google.maps.Map(_this.$.map, {
                         zoom: 4,
-                        center: start
+                        center: {lat: 0, lng: 0}
                     });
-                    _this.map = map;
-                    _this.getLocations(true);
+                    _this.bounds = new google.maps.LatLngBounds();
+                    _this._initialize();
                 };
                 if (!('google' in window) || !('maps' in window.google)) {
                     var script = document.createElement('script');
@@ -68,28 +69,246 @@
                     initializeLocationsMap();
                 }
             },
-            
-            attached: function() {
-                this.calcHeight();
+
+            notificationReceived:function(e) {
+                var payload = JSON.parse(event.detail.notification.payload);
+                var instanceKey = payload.trackerId+'-'+payload.zoneNamespace;
+
+                if (!this.trackerInstances[instanceKey]) {
+                    this._drawTracker(payload);
+                }
+                else {
+                    this.fire('message-info','Adjusting incident location based on new data...');
+                    //cancel the current movement because we'll start it again based on new notification data
+                    clearInterval(this.trackerInstances[instanceKey].interval);
+                    //update user location as well in case it's changed
+                    this._getLastUserLocation();
+                }
+                this._moveTracker(payload);
             },
-            
-            calcHeight: function() {
+
+            _moveTracker: function(payload) {
+                var _this = this;
+                var instanceKey = payload.trackerId + '-' + payload.zoneNamespace;
+                var distance = this._calculateTotalDistance(payload.speed);
+                var path = this._generatePath(distance,payload.bearing,payload.location);
+                var interval = 1000 / (path.length / (this.duration * 60)); //number of milliseconds to move one point
+                var i = 1;
+                //save the interval so we can cancel this later before starting
+                //a new one when receiving the next notification
+                this.trackerInstances[instanceKey].interval = setInterval(function() {
+                    //move the tracker
+                    _this._trackerMoved(instanceKey,path[i]); //update the zone positions
+                    //check if it's time to stop movement
+                    if (i+1 == path.length) {
+                        clearInterval(_this.trackerInstances[instanceKey].interval);
+                        return;
+                    }
+                    i++;
+                },interval);
+            },
+
+            _drawTracker: function(payload) {
+                var trackerId = payload.trackerId;
+                var zoneNamespace = payload.zoneNamespace;
+                //clone tracker object in case we have multiple instances of it
+                var tracker = JSON.parse(JSON.stringify(this.trackers[trackerId]));
+                //create marker based on position
+                var marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(payload.location[1],payload.location[0]),
+                    map: this.map,
+                    draggable: false,
+                    icon: 'images/'+tracker.properties.icon
+                });
+                //associate the circle regions with the tracker
+                this.trackerInstances[tracker._id+'-'+zoneNamespace] = {"zones":[],"marker":marker,"interval":null};//{"tracker":tracker,"zones":[],"marker":marker};
+                //create the circle zones
+                var circle;
+                var zones = tracker.zones.features;
+                for (var i=0; i<zones.length; i++) {
+                    circle = new google.maps.Circle({
+                        'map': this.map,
+                        'radius': zones[i].properties.googleMaps.radius,
+                        'fillColor': zones[i].properties.Color,
+                        'zIndex': zones[i].properties.googleMaps.zIndex,
+                        'editable': false
+                    });
+                    //associate the zone with the tracker so we can sync them on movement
+                    this.trackerInstances[trackerId+'-'+zoneNamespace].zones.push(circle);
+                }
+
+                //set the bounds around this newly dropped tracker
+                this._trackerMoved(trackerId+'-'+zoneNamespace,marker.getPosition());
+                this.map.fitBounds(this.bounds);
+                this.map.panToBounds(this.bounds);
+            },
+
+            _trackerMoved: function(instanceKey,latLng) {
+                //reset the bounds for each movement
+                this.bounds = new google.maps.LatLngBounds();
+                var marker = this.trackerInstances[instanceKey].marker;
+                marker.setPosition(latLng); //update the marker position
+                //update the center point of associated zones
+                var zones = this.trackerInstances[instanceKey].zones;
+                for (var i=0; i<zones.length; i++) {
+                    zones[i].setCenter(latLng);
+                    //update the bounds
+                    this.bounds.union(zones[i].getBounds());
+                }
+                //fit and pan the map to the bounds
+                this.map.fitBounds(this.bounds);
+                this.map.panToBounds(this.bounds);
+            },
+
+            _generatePath: function(distance,bearing,location) {
+                var _this = this;
+                var path = [];
+                var coordDistance = 2; //distance between each coordinate, in meters
+                var numCoords = distance / coordDistance; //the number of coordinates needed to cover the path distance
+
+                var lat1 = this._toRadians(location[1]);
+                var lng1 = this._toRadians(location[0]);
+                bearing = _this._toRadians(bearing);
+                addCoordinates(lat1,lng1);
+                return path;
+
+                //generate coordinates 2 meters apart until we reach the number of coordinates that we need
+                function addCoordinates(lat1, lng1) {
+                    var eRadius = 6371000; //earth's mean radius in meters
+
+                    var lat2 = Math.asin(Math.sin(lat1)*Math.cos(coordDistance/eRadius) +
+                               Math.cos(lat1)*Math.sin(coordDistance/eRadius)*Math.cos(bearing));
+                    var lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(coordDistance/eRadius)*Math.cos(lat1),
+                               Math.cos(coordDistance/eRadius)-Math.sin(lat1)*Math.sin(lat2));
+
+                    path.push(new google.maps.LatLng(_this._toDegrees(lat2),_this._toDegrees(lng2)));
+
+                    if (path.length < numCoords) {
+                        addCoordinates(lat2, lng2);
+                    }
+                }
+            },
+
+            _toRadians: function(degrees) {
+                return degrees * Math.PI / 180;
+            },
+
+            _toDegrees: function(radians) {
+                return radians * 180 / Math.PI;
+            },
+
+            _calculateTotalDistance: function(speed) {
+                speed = speed * 0.277778; //convert speed from km/h to m/s
+                var time = this.duration * 60; //time of travel in seconds
+                return speed * time; //distance in meters
+            },
+
+            _initialize:function() {
+                var _this = this;
+                var promises = [];
+                //get all the tracker templates
+                promises.push(voyent.io.locate.getAllTrackers({realm:_this.realm}).then(function (trackers) {
+                    _this.trackers = {};
+                    for (var i=0; i<trackers.length; i++) {
+                        _this.trackers[trackers[i]._id] = trackers[i];
+                    }
+                }));
+                //get the last user location
+                promises.push(this._getLastUserLocation());
+                //get the scoped tracker data (so we can fetch the icon)
+                promises.push(voyent.io.scope.getRealmData({'property':'trackerData'}).then(function(data) {
+                    _this.trackerData = data;
+                }));
+                Promise.all(promises).then(function () {
+                    _this._processTrackerData();
+                })['catch'](function (error) {
+                    _this.fire('message-error','Error initializing map view: ' + (error ? (error.message || error.responseText) : error));
+                });
+            },
+
+            _processTrackerData: function() {
+                //save the icon bound in the message template to the tracker properties so we can render it later
+                var zone;
+                for (var tracker in this.trackers) {
+                    if (!this.trackers.hasOwnProperty(tracker)) {
+                        continue;
+                    }
+                    if (!this.trackers[tracker].properties) {
+                        this.trackers[tracker].properties = {};
+                    }
+                    for (var j=0; j<this.trackers[tracker].zones.features.length; j++) {
+                        zone = this.trackers[tracker].zones.features[j].properties.zoneId;
+                        //set default icon to fallback to in case we don't find an icon
+                        this.trackers[tracker].properties.icon = 'incident_marker.png';
+                        //search the message templates for an icon and save the first one that is found
+                        if (this.trackerData[this.trackers[tracker]._id] && this.trackerData[this.trackers[tracker]._id][zone]) {
+                            if (this.trackerData[this.trackers[tracker]._id][zone].global &&
+                                    this.trackerData[this.trackers[tracker]._id][zone].global.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].global.icon);
+                                break;
+                            }
+                            else if (this.trackerData[this.trackers[tracker]._id][zone].increase &&
+                                    this.trackerData[this.trackers[tracker]._id][zone].increase.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].increase.icon);
+                                break;
+                            }
+                            else if (this.trackerData[this.trackers[tracker]._id][zone].decrease &&
+                                    this.trackerData[this.trackers[tracker]._id][zone].decrease.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].decrease.icon);
+                                break;
+                            }
+                        }
+                    }
+                }
+                function _parseIconURL(url) {
+                    var parts = url.split('/');
+                    var img = parts[parts.length-1];
+                    return img.replace('_inverted','');
+                }
+            },
+
+            _getLastUserLocation: function() {
+                var _this = this;
+                return new Promise(
+                    function(resolve, reject) {
+                        voyent.io.locate.getLastUserLocation({"username":voyent.io.auth.getLastKnownUsername()}).then(function(location) {
+                            var latLng = new google.maps.LatLng(location.location.geometry.coordinates[1], location.location.geometry.coordinates[0]);
+                            //move marker if it's already placed on map
+                            if (_this.userMarker) {
+                                _this.userMarker.setPosition(latLng);
+                            }
+                            else { //create new user marker
+                                _this.userMarker = new google.maps.Marker({
+                                    position: latLng,
+                                    map: _this.map,
+                                    draggable: false,
+                                    icon: 'images/user_marker.png'
+                                });
+                            }
+                            resolve();
+                        })['catch'](function(error){
+                            reject(error);
+                        });
+                    }
+                );
+            },
+
+            _calcHeight: function() {
                 var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-                
+
                 if (document.getElementById("mainHeader")) {
                     var headerHeight = document.getElementById("mainHeader").clientHeight;
                     if (headerHeight) {
                         h -= headerHeight;
                     }
                 }
-
-                _this.set("height", h);
-                _this.customStyle['--height-var'] = h + 'px';
-                _this.updateStyles();
+                this.set("height", h);
+                this.customStyle['--height-var'] = h + 'px';
+                this.updateStyles();
             },
 
-            visibleChanged:function(){
-                if(this.visible) {
+            _visibleChanged:function(){
+                if (this.visible) {
                     function waitForPushConnection() {
                         if (!voyent.xio.push.connected) {
                             setTimeout(waitForPushConnection, 100);
@@ -103,127 +322,6 @@
                 else{
                     voyent.xio.push.leave('trackerMove');
                 }
-            },
-
-            getLocations:function(resetMap){
-                var promises = [];
-                var trackers;
-                var location;
-                _this.oldUser = _this.user;
-                //_this.oldAnchor = _this.anchor;
-                //_this.oldZones = _this.zones;
-                _this.zones = [];
-                _this.trackers = {};
-                promises.push(voyent.io.locate.getAllTrackers({realm:_this.realm}).then(function (t) {
-                    trackers = t;
-                    console.log(trackers);
-                }));
-
-                promises.push(voyent.io.locate.findLocations({realm:voyent.io.auth.getLastKnownRealm(),'query':{'username':voyent.io.auth.getLastKnownUsername()}, 'options':{"sort":{"lastUpdated":-1},"limit":1}}).then(function(l){
-                    location = l[0];
-                }));
-                //promises.push(voyent.io.locate.getLastUserLocation({'username':voyent.io.auth.getLastKnownUsername()}).then(function(l){
-                //    console.log(voyent.io.auth.getLastKnownUsername());
-                //    console.log('Found person');
-                //        console.log(l)
-                //    }));
-                //Use getLastUserLocation? promises.push(voyent.io.locate.getLastUserLocation)
-                return Promise.all(promises).then(function () {
-                    var locationPromises = [];
-                    var locations = {};
-                    for (var j = 0; j < trackers.length; j++){
-                        locationPromises.push(voyent.io.locate.getLastUserLocation({realm:_this.realm,username:trackers[j]._id}).then(function(l){
-                            locations[l.username] = l;
-                        }));
-                    }
-                    return Promise.all(locationPromises).then(function(){
-                        var bounds = new google.maps.LatLngBounds();
-                        if(_this.oldUser){
-                            _this.oldUser.setMap(null)
-                        }
-                        /**if(_this.oldAnchor){
-                            _this.oldAnchor.setMap(null);
-                        }
-                        for(var i = 0; i < _this.oldZones.length; i++){
-                            _this.oldZones[i].setMap(null);
-                        }*/
-                        for (i = 0; i < trackers.length; i++) {
-                            try {
-
-                                var anchorCoords = trackers[i].anchor.geometry.coordinates;
-                                var googlePoint;
-                                var lastKnownTrackerLocation = locations[trackers[i]._id];
-                                if (lastKnownTrackerLocation) {
-                                    googlePoint = new google.maps.LatLng(lastKnownTrackerLocation.location.geometry.coordinates[1],
-                                            lastKnownTrackerLocation.location.geometry.coordinates[0]);
-                                }
-                                else {
-                                    googlePoint = new google.maps.LatLng(anchorCoords[1], anchorCoords[0]);
-                                }
-                                poi = new google.maps.Marker({
-                                    position: googlePoint,
-                                    map: _this.map,
-                                    draggable: false,
-                                    zIndex: trackers[i].anchor.properties.zIndex
-                                });
-                                _this.anchor = poi;
-
-                                bounds.extend(googlePoint);
-                                var geoJSON = trackers[i];
-
-                                var zones = [];
-                                for(var j = 0; j < geoJSON.zones.features.length; j++){
-
-                                    var zone = geoJSON.zones.features[j];
-                                    var metadata = zone.properties.googleMaps;
-                                    var region = new google.maps.Circle({
-                                        'center': googlePoint,
-                                        'radius': metadata.radius,
-                                        'map': _this.map,
-                                        'editable': false,
-                                        'fillColor': zone.properties.Color,
-                                        'zIndex': metadata.zIndex
-                                    });
-                                    zones.push(region);
-                                    region.bindTo('center', poi, 'position');
-                                }
-                                if (!geoJSON.properties.zoneNamespace) {
-                                    geoJSON.properties.zoneNamespace = 'default';
-                                }
-                                _this.trackers[trackers[i]._id] = {'anchor':poi,'zones':zones};
-
-                            }
-                            catch (err) {
-                                this.fire('message-error', "Issue importing tracker: " + JSON.stringify(data[i]), err);
-                            }
-                        }
-                        googlePoint = new google.maps.LatLng(location.location.geometry.coordinates[1], location.location.geometry.coordinates[0]);
-                        var poi;
-                        poi = new google.maps.Marker({
-                            position: googlePoint,
-                            map: _this.map,
-                            draggable: false,
-                            icon: 'images/user.png'
-                        });
-                        _this.user = poi;
-                        bounds.extend(googlePoint);
-
-                        if(resetMap){
-                            _this.map.fitBounds(bounds);
-                            _this.map.panToBounds(bounds);
-                            _this.map.setZoom(_this.map.getZoom()-3);
-                        }
-                    });
-
-                })['catch'](function (error) {
-                    console.log('<voyent-locations> Error: ' + ( error.message || error.responseText));
-                    console.log(error);
-                });
-            },
-            moveLocations:function(event){
-                var payload = JSON.parse(event.detail.notification.payload);
-                var newLocation = new google.maps.LatLng({lat:payload.location[1],lng:payload.location[0]});
-                _this.trackers[payload.trackerId].anchor.setPosition(newLocation);
             }
         });
     </script>
