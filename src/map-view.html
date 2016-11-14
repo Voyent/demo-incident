@@ -78,7 +78,6 @@
                     this._drawTracker(payload);
                 }
                 else {
-                    this.fire('message-info','Adjusting incident location based on new data...');
                     //cancel the current movement because we'll start it again based on new notification data
                     clearInterval(this.trackerInstances[instanceKey].interval);
                     //update user location as well in case it's changed
