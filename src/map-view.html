@@ -138,25 +138,16 @@
 
                 //set the bounds around this newly dropped tracker
                 this._trackerMoved(trackerId+'-'+zoneNamespace,marker.getPosition());
-                this.map.fitBounds(this.bounds);
-                this.map.panToBounds(this.bounds);
             },
 
             _trackerMoved: function(instanceKey,latLng) {
-                //reset the bounds for each movement
-                this.bounds = new google.maps.LatLngBounds();
                 var marker = this.trackerInstances[instanceKey].marker;
                 marker.setPosition(latLng); //update the marker position
                 //update the center point of associated zones
                 var zones = this.trackerInstances[instanceKey].zones;
                 for (var i=0; i<zones.length; i++) {
                     zones[i].setCenter(latLng);
-                    //update the bounds
-                    this.bounds.union(zones[i].getBounds());
                 }
-                //fit and pan the map to the bounds
-                this.map.fitBounds(this.bounds);
-                this.map.panToBounds(this.bounds);
             },
 
             _generatePath: function(distance,bearing,location) {
@@ -283,6 +274,10 @@
                                     draggable: false,
                                     icon: 'images/user_marker.png'
                                 });
+                                //zoom on the user marker initially
+                                _this.bounds.extend(_this.userMarker.getPosition());
+                                _this.map.fitBounds(_this.bounds);
+                                _this.map.panToBounds(_this.bounds);
                             }
                             resolve();
                         })['catch'](function(error){
