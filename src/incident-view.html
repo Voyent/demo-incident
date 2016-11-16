@@ -448,6 +448,10 @@
                 
                 var _this = this;
                 voyent.io.locate.getAllTrackers({}).then(function(trackers) {
+                    //don't show "child" tracker templates
+                    trackers = trackers.filter(function(tracker) {
+                        return !tracker.properties || !tracker.properties.parentTrackerId;
+                    });
                     _this.set('trackers', trackers);
                     if (_this.tracker) {
                         _this._updateZones();
