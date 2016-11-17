@@ -278,6 +278,8 @@
                                 _this.bounds.extend(_this.userMarker.getPosition());
                                 _this.map.fitBounds(_this.bounds);
                                 _this.map.panToBounds(_this.bounds);
+                                //zoom out a bit
+                                _this.map.setZoom(14)
                             }
                             resolve();
                         })['catch'](function(error){
