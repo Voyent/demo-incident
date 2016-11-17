@@ -233,6 +233,17 @@
                     }
                 }
                 
+                // Also make sure we have a global Return URL
+                // This is hardcoded to go to our Client page
+                if (this.trackerData[this.tracker][this.zone].hasOwnProperty('global')) {
+                }
+                else {
+                    this.trackerData[this.tracker][this.zone].global = {};
+                }
+                if (!this.trackerData[this.tracker][this.zone]['global'].hasOwnProperty('url')) {
+                    this.trackerData[this.tracker][this.zone].global.url = "http://dev.voyent.cloud/demos/incident/client.html";
+                }
+                
                 var data = {};
                 data[this._getScopedPropertyName()] = this.trackerData[this.tracker][this.zone];
                 voyent.io.scope.createRealmData({'data': data}).then(function() {
