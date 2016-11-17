@@ -400,6 +400,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this._emailSelected = voyent.xio.push.emailRegistered();
 
         this._setupListeners();
+        this._setupVoyentNotifyConfig();
       },
       properties: {
         page: {
@@ -650,10 +651,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           _this._showInfoToast(e.detail);
         });
 
-        document.addEventListener('voyentNotifyInitialized',function(e) {
-          e.detail.config.autoSelectNotification = 'newest';
-        });
-
         document.addEventListener('notificationClicked',function(e) {
           //prevent the default behaviour of redirecting to URL
           e.preventDefault();
@@ -698,6 +695,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           console.log('app received event voyent-session-disconnected', e);
           voyent.xio.push.disconnect();
         });
+      },
+
+      _setupVoyentNotifyConfig: function() {
+          voyent.notify.config.autoSelectNotification = 'newest';
+          if (!this.isAdmin) {
+              voyent.notify.config.native.enabled = false;
+              voyent.notify.config.toast.hideAfterMs = -1;
+              voyent.notify.config.toast.stackLimit = 1;
+              voyent.notify.config.toast.overwriteOld = true;
+          }
       }
     });
   </script>
