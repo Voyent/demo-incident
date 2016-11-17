@@ -227,21 +227,12 @@
                 }
                 
                 // Ensure increase and decrease have the selected icon applied to their data
+                // Also make sure a URL is present for each
                 for (var att in this.availableAttitudes) {
                     if (this.trackerData[this.tracker][this.zone].hasOwnProperty(this.availableAttitudes[att])) {
                         this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]].icon = this.selectedIcon;
+                        this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]].url = "http://dev.voyent.cloud/demos/incident/client.html";
                     }
-                }
-                
-                // Also make sure we have a global Return URL
-                // This is hardcoded to go to our Client page
-                if (this.trackerData[this.tracker][this.zone].hasOwnProperty('global')) {
-                }
-                else {
-                    this.trackerData[this.tracker][this.zone].global = {};
-                }
-                if (!this.trackerData[this.tracker][this.zone]['global'].hasOwnProperty('url')) {
-                    this.trackerData[this.tracker][this.zone].global.url = "http://dev.voyent.cloud/demos/incident/client.html";
                 }
                 
                 var data = {};
