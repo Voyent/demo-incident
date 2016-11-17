@@ -223,28 +223,33 @@
                     if (!this.trackers.hasOwnProperty(tracker)) {
                         continue;
                     }
-                    if (!this.trackers[tracker].properties) {
-                        this.trackers[tracker].properties = {};
+                    var thisTracker = this.trackers[tracker];
+                    if (!thisTracker.properties) {
+                        thisTracker.properties = {};
                     }
-                    for (var j=0; j<this.trackers[tracker].zones.features.length; j++) {
-                        zone = this.trackers[tracker].zones.features[j].properties.zoneId;
+                    //if we have a child tracker template we search the parent for the icon instead
+                    if (thisTracker.properties.parentTrackerId) {
+                        thisTracker = this.trackers[thisTracker.properties.parentTrackerId];
+                    }
+                    for (var j=0; j<thisTracker.zones.features.length; j++) {
+                        zone = thisTracker.zones.features[j].properties.zoneId;
                         //set default icon to fallback to in case we don't find an icon
-                        this.trackers[tracker].properties.icon = 'incident_marker.png';
+                        thisTracker.properties.icon = 'incident_marker.png';
                         //search the message templates for an icon and save the first one that is found
-                        if (this.trackerData[this.trackers[tracker]._id] && this.trackerData[this.trackers[tracker]._id][zone]) {
-                            if (this.trackerData[this.trackers[tracker]._id][zone].global &&
-                                    this.trackerData[this.trackers[tracker]._id][zone].global.icon) {
-                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].global.icon);
+                        if (this.trackerData[thisTracker._id] && this.trackerData[thisTracker._id][zone]) {
+                            if (this.trackerData[thisTracker._id][zone].global &&
+                                    this.trackerData[thisTracker._id][zone].global.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[thisTracker._id][zone].global.icon);
                                 break;
                             }
-                            else if (this.trackerData[this.trackers[tracker]._id][zone].increase &&
-                                    this.trackerData[this.trackers[tracker]._id][zone].increase.icon) {
-                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].increase.icon);
+                            else if (this.trackerData[thisTracker._id][zone].increase &&
+                                    this.trackerData[thisTracker._id][zone].increase.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[thisTracker._id][zone].increase.icon);
                                 break;
                             }
-                            else if (this.trackerData[this.trackers[tracker]._id][zone].decrease &&
-                                    this.trackerData[this.trackers[tracker]._id][zone].decrease.icon) {
-                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].decrease.icon);
+                            else if (this.trackerData[thisTracker._id][zone].decrease &&
+                                    this.trackerData[thisTracker._id][zone].decrease.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[thisTracker._id][zone].decrease.icon);
                                 break;
                             }
                         }
