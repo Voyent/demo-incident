@@ -255,6 +255,14 @@
                         }
                     }
                 }
+                //display the last notification in the queue on app load
+                if (voyent.notify.queue.length) {
+                    //re-display the last notification
+                    var lastNotification = voyent.notify.getNewestNotification();
+                    voyent.notify.displayNotification(lastNotification);
+                    this._drawTracker(lastNotification.payload);
+                }
+
                 function _parseIconURL(url) {
                     var parts = url.split('/');
                     var img = parts[parts.length-1];

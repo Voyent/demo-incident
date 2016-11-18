@@ -31,8 +31,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/iron-icons/communication-icons.html">
 <link rel="import" href="../bower_components/iron-icons/maps-icons.html">
-<link rel="import" href="../bower_components/voyent-web-components/common/imports/voyent-xio.html">
-<link rel="import" href="../bower_components/voyent.notify.js/voyent.notify.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-auth-provider/voyent-auth-provider.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-login-paper-card/voyent-login-paper-card.html">
 
@@ -401,6 +399,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this._cloudSelected = voyent.xio.push.cloudPushRegistered();
         this._smsSelected = voyent.xio.push.smsRegistered();
         this._emailSelected = voyent.xio.push.emailRegistered();
+
+        //manually load notifications saved in the queue here since voyent.notify.js will fire
+        //queue events onload and we don't listen for those events until after onload fires
+        this.set('_notifications',voyent.notify.queue);
+        this.set('_notificationCount', voyent.notify.getNotificationCount());
 
         this._setupListeners();
         this._setupVoyentNotifyConfig();
