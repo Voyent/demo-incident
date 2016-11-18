@@ -291,8 +291,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- Main content -->
         <app-header-layout has-scrolling-region>
-          <app-header condenses reveals effects="waterfall">
-            <app-toolbar id="mainHeader">
+          <app-header reveals effects="waterfall">
+            <app-toolbar id="mainHeader" sticky>
                 <template is="dom-if" if="{{!isClient}}">
                     <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
                 </template>
