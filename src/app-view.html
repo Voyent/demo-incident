@@ -178,6 +178,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       .errorToast{
         background-color: #C70000;
       }
+      .hidden-phone {
+          text-decoration: none;
+      }
       @media all and (min-width: 0) and (max-width: 320px) and (orientation: portrait) {
         .hidden-phone {
           display: none;
@@ -291,7 +294,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- Main content -->
         <app-header-layout has-scrolling-region>
-          <app-header reveals effects="waterfall">
+          <app-header fixed condenses effects="waterfall">
             <app-toolbar id="mainHeader" sticky>
                 <template is="dom-if" if="{{!isClient}}">
                     <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
