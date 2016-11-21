@@ -1,9 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-action-editor/voyent-action-editor.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-action-editor/voyent-action-list.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-email-editor/voyent-email-editor.html">
+<link rel="import" href="../bower_components/voyent-web-components/voyent-backpack-log/voyent-backpack-log.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="actions-view">
@@ -113,6 +116,19 @@
                 };
             }
         </style>
+        
+        <style is="custom-style">
+          paper-dialog {
+            position: fixed;
+            top: 69px;
+            right: 15px;
+            width: 30%;
+            max-height: var(--dialog-height);
+            margin: 0;
+            padding: 0;
+            overflow: auto;
+          }
+        </style>
 
         <paper-tabs selected="{{selectedTab}}" no-bar>
             <paper-tab>Actions</paper-tab>
@@ -120,9 +136,22 @@
         </paper-tabs>
         <iron-pages selected="{{selectedTab}}">
             <div class="tab-content">
-                <voyent-action-editor barpad="64">
+                <paper-button raised on-click="_toggleDebugDialog" style="float: left;">Debug</paper-button>
+                
+                <voyent-action-editor id="actionEditor" barpad="64">
                     <voyent-action-list></voyent-action-list>
                 </voyent-action-editor>
+                
+                <paper-dialog id="backpackDialog" always-on-top="true"
+                                                  no-auto-focus="true"
+                                                  no-cancel-on-outside-click="true"
+                                                  no-cancel-on-esc-key="true">
+                    <paper-button dialog-dismiss style="float: right;">Close</paper-button>
+                    <voyent-backpack-log id="backpackLog"
+                                         inline="true"
+                                         filter-action="{{filterAction}}">
+                    </voyent-backpack-log>
+                </paper-dialog>
             </div>
             <div class="tab-content">
                 <voyent-email-editor id="emailEditor"></voyent-email-editor>
@@ -141,8 +170,37 @@
                 selectedTab: {
                     type: Number,
                     value: 0
+                },
+                filterAction: {
+                    type: String,
+                    notify: true
+                },
+            },
+            
+            ready: function() {
+                // Set the dialog height to 90% of the page (minus the top set via CSS above)
+                var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+                if (h) {
+                    this.customStyle['--dialog-height'] = ((h-69)*0.9) + "px";
                 }
-            }
+                else {
+                    this.customStyle['--dialog-height'] = "400px";
+                }
+                this.updateStyles();
+                
+                // Listen for actions being loaded, in which case we'll want to update the action we filter on in the logs
+                var _this = this;
+                window.addEventListener('action-loaded',  function(e) {
+                    if (e && e.detail && e.detail._id) {
+                        // Update our loaded action
+                        _this.set('filterAction', e.detail._id);
+                    }
+                });
+            },
+            
+            _toggleDebugDialog: function() {
+                this.$.backpackDialog.toggle();
+            },
         });
     </script>
 </dom-module>
