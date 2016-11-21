@@ -245,9 +245,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <app-toolbar class="noShadow">System Setup</app-toolbar>
           <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
             <template is="dom-if" if="{{isAdmin}}">
-              <a name="home" href="#/">
-                <iron-icon icon="home"></iron-icon>
-                <span>Home</span>
+              <a name="dashboard" href="#/dashboard" title="Simulate incident movement">
+                <iron-icon icon="important-devices"></iron-icon>
+                <span>Dashboard</span>
+              </a>
+              <a name="incident" href="#/incident" title="Manage incident and message templates">
+                <iron-icon icon="maps:edit-location"></iron-icon>
+                <span>Templates</span>
               </a>
               <a name="notifications" href="#/notifications" title="View the queue of notifications">
                 <iron-icon icon="announcement"></iron-icon>
@@ -258,14 +262,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <span>Notifications <span style="font-size: 12px; font-weight: normal;">({{_notificationCount}})</span></span>
                 </template>
               </a>
-              <a name="incident" href="#/incident" title="Manage incidents">
-                <iron-icon icon="maps:edit-location"></iron-icon>
-                <span>Incidents</span>
-              </a>
-              <a name="dashboard" href="#/dashboard" title="Simulate incident movement">
-                <iron-icon icon="important-devices"></iron-icon>
-                <span>Dashboard</span>
-              </a>
+              
+              <hr/>
+              <app-toolbar class="noShadow">Analytics & Debug</app-toolbar>
               <a name="actions" href="#/actions" title="Use the action editor to setup powerful application logic">
                 <iron-icon icon="track-changes"></iron-icon>
                 <span>Actions</span>
