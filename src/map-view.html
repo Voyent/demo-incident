@@ -152,31 +152,29 @@
 
             _generatePath: function(distance,bearing,location) {
                 var _this = this;
-                var path = [];
+                var path = []; //array of latLng objects containing all coordinates for the path
                 var coordDistance = 2; //distance between each coordinate, in meters
                 var numCoords = distance / coordDistance; //the number of coordinates needed to cover the path distance
 
                 var lat1 = this._toRadians(location[1]);
                 var lng1 = this._toRadians(location[0]);
-                bearing = _this._toRadians(bearing);
-                addCoordinates(lat1,lng1);
-                return path;
 
                 //generate coordinates 2 meters apart until we reach the number of coordinates that we need
-                function addCoordinates(lat1, lng1) {
-                    var eRadius = 6371000; //earth's mean radius in meters
-
-                    var lat2 = Math.asin(Math.sin(lat1)*Math.cos(coordDistance/eRadius) +
-                               Math.cos(lat1)*Math.sin(coordDistance/eRadius)*Math.cos(bearing));
-                    var lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(coordDistance/eRadius)*Math.cos(lat1),
-                               Math.cos(coordDistance/eRadius)-Math.sin(lat1)*Math.sin(lat2));
+                var lat2, lng2;
+                bearing = _this._toRadians(bearing);
+                var eRadius = 6371000; //earth's mean radius in meters
+                for (var i=0; i<numCoords; i++) {
+                    lat2 = Math.asin(Math.sin(lat1)*Math.cos(coordDistance/eRadius) +
+                        Math.cos(lat1)*Math.sin(coordDistance/eRadius)*Math.cos(bearing));
+                    lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(coordDistance/eRadius)*Math.cos(lat1),
+                            Math.cos(coordDistance/eRadius)-Math.sin(lat1)*Math.sin(lat2));
 
                     path.push(new google.maps.LatLng(_this._toDegrees(lat2),_this._toDegrees(lng2)));
 
-                    if (path.length < numCoords) {
-                        addCoordinates(lat2, lng2);
-                    }
+                    lat1 = lat2;
+                    lng1 = lng2;
                 }
+                return path;
             },
 
             _toRadians: function(degrees) {
