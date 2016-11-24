@@ -91,8 +91,15 @@
                     clearInterval(this.trackerInstances[instanceKey].interval);
                     //update user location as well in case it's changed
                     this._getLastUserLocation();
+                    //just move the tracker position since the location update was manual
+                    if (payload.updateType === 'manual') {
+                        this._trackerMoved(instanceKey,new google.maps.LatLng(payload.location[1],payload.location[0]));
+                    }
                 }
-                this._moveTracker(payload);
+                //only start movement if the location update was triggered via a simulation
+                if (payload.updateType === 'simulated') {
+                    this._moveTracker(payload);
+                }
             },
 
             _moveTracker: function(payload) {
