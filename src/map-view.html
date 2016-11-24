@@ -53,7 +53,16 @@
                 window.initializeLocationsMap = function () {
                     _this.map = new google.maps.Map(_this.$.map, {
                         zoom: 4,
-                        center: {lat: 0, lng: 0}
+                        center: {lat: 0, lng: 0},
+                        streetViewControl: false,
+                        mapTypeControlOptions: {
+                            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                            position: google.maps.ControlPosition.RIGHT_TOP
+                        },
+                        zoomControlOptions: {
+                            style: google.maps.ZoomControlStyle.LARGE,
+                            position: google.maps.ControlPosition.LEFT_CENTER
+                        }
                     });
                     _this.bounds = new google.maps.LatLngBounds();
                     _this._initialize();
