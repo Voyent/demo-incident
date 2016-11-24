@@ -389,7 +389,9 @@
                     //the icon has actually changed for this tracker before continuing
                     //all templates should have the same icon so just select the first one
                     var firstZone = Object.keys(this.trackerData[this.tracker])[0];
-                    if (this.trackerData[this.tracker][firstZone].hasOwnProperty('global') && this.selectedIcon === this.trackerData[this.tracker][firstZone].global.icon) {
+                    var keys = Object.keys(this.trackerData[this.tracker][firstZone]);
+                    if (keys.length &&
+                        this.selectedIcon === this.trackerData[this.tracker][firstZone][keys[0]].icon) {
                         return; //icon hasn't changed
                     }
                     var _this = this;
