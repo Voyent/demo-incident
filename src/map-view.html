@@ -94,6 +94,18 @@
                     //just move the tracker position since the location update was manual
                     if (payload.updateType === 'manual') {
                         this.trackerInstances[instanceKey].marker.setPosition(new google.maps.LatLng(payload.location[1],payload.location[0]));
+                        //reset map bounds for each manual movement
+                        this.bounds = new google.maps.LatLngBounds();
+                        for (var i=0; i<this.trackerInstances[instanceKey].zones.length; i++) {
+                            this.bounds.union(this.trackerInstances[instanceKey].zones[i].getBounds());
+                        }
+                        //include user marker in bounds
+                        if (this.userMarker) {
+                            this.bounds.extend(this.userMarker.getPosition());
+                        }
+                        //update bounds
+                        this.map.fitBounds(this.bounds);
+                        this.map.panToBounds(this.bounds);
                     }
                 }
                 //only start movement if the location update was triggered via a simulation
