@@ -63,5 +63,8 @@
     "bower_components/voyent-web-components/voyent-location-simulator/images/lightning_marker.png",
     "bower_components/voyent-web-components/voyent-location-simulator/images/tornado_marker.png",
     "bower_components/voyent-web-components/voyent-location-simulator/images/hurricane_marker.png"
+    "bower_components/voyent-web-components/voyent-location-simulator/images/gas_marker.png"
+    "bower_components/voyent-web-components/voyent-location-simulator/images/shooter_marker.png"
+    "bower_components/voyent-web-components/voyent-location-simulator/images/traffic_marker.png"
   ]
 }
