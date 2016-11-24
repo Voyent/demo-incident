@@ -487,11 +487,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       _handleLogout: function() {
+        // Auth logout, reset some variables
         this.page = this.isAdmin ? (this.isDashboard ? 'dashboard' : 'home') : 'map';
-        window.location.hash = '';
         this.$$('#loginCard').password = '';
         this.$$('#authProvider').logout();
-        //reload page to wipe out component states and start fresh each time
+        
+        // Workaround...we keep the state of our flag to prevent flicker in the page
+        // Otherwise the view will switch to the login card, then immediately reload from the code below
+        // This boolean will be reset on page reload anyway, as it is freshly pulled from auth provider
+        // Which means we will return to false properly in the "ready" of this view
+        this._isLoggedIn = true;
+        
+        // Refresh the page
+        window.location.hash = '';
         location.reload();
       },
       _toggleSMS: function() {
