@@ -91,8 +91,15 @@
                     clearInterval(this.trackerInstances[instanceKey].interval);
                     //update user location as well in case it's changed
                     this._getLastUserLocation();
+                    //just move the tracker position since the location update was manual
+                    if (payload.updateType === 'manual') {
+                        this.trackerInstances[instanceKey].marker.setPosition(new google.maps.LatLng(payload.location[1],payload.location[0]));
+                    }
                 }
-                this._moveTracker(payload);
+                //only start movement if the location update was triggered via a simulation
+                if (payload.updateType === 'simulated') {
+                    this._moveTracker(payload);
+                }
             },
 
             _moveTracker: function(payload) {
@@ -106,7 +113,7 @@
                 //a new one when receiving the next notification
                 this.trackerInstances[instanceKey].interval = setInterval(function() {
                     //move the tracker
-                    _this._trackerMoved(instanceKey,path[i]); //update the zone positions
+                    _this.trackerInstances[instanceKey].marker.setPosition(path[i]);
                     //check if it's time to stop movement
                     if (i+1 == path.length) {
                         clearInterval(_this.trackerInstances[instanceKey].interval);
@@ -141,22 +148,17 @@
                         'zIndex': zones[i].properties.googleMaps.zIndex,
                         'editable': false
                     });
+                    //bind the marker position to the zone centers so when we update the position of the marker the zones follow
+                    circle.bindTo('center', marker, 'position');
                     //associate the zone with the tracker so we can sync them on movement
                     this.trackerInstances[trackerId+'-'+zoneNamespace].zones.push(circle);
-                }
 
-                //set the bounds around this newly dropped tracker
-                this._trackerMoved(trackerId+'-'+zoneNamespace,marker.getPosition());
-            },
-
-            _trackerMoved: function(instanceKey,latLng) {
-                var marker = this.trackerInstances[instanceKey].marker;
-                marker.setPosition(latLng); //update the marker position
-                //update the center point of associated zones
-                var zones = this.trackerInstances[instanceKey].zones;
-                for (var i=0; i<zones.length; i++) {
-                    zones[i].setCenter(latLng);
+                    //include the zones in the bounds when first drawing the tracker
+                    this.bounds.union(circle.getBounds());
                 }
+                //update bounds
+                this.map.fitBounds(this.bounds);
+                this.map.panToBounds(this.bounds);
             },
 
             _generatePath: function(distance,bearing,location) {
