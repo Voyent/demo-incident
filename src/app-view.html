@@ -491,6 +491,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         window.location.hash = '';
         this.$$('#loginCard').password = '';
         this.$$('#authProvider').logout();
+        //reload page to wipe out component states and start fresh each time
+        location.reload();
       },
       _toggleSMS: function() {
         if (this._smsSelected) {
