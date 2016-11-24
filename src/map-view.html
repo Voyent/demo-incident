@@ -288,10 +288,19 @@
                                 _this.userMarker.setPosition(latLng);
                             }
                             else { //create new user marker
+                                var labelText = "?";
+                                if (voyent.io.auth.getLastKnownUsername() && voyent.io.auth.getLastKnownUsername().length > 0) {
+                                    labelText = voyent.io.auth.getLastKnownUsername().substring(0, 1).toLowerCase();
+                                }
+                                
                                 _this.userMarker = new google.maps.Marker({
                                     position: latLng,
                                     map: _this.map,
                                     draggable: false,
+                                    label: {
+                                        text: labelText,
+                                        color: "white",
+                                    },
                                     icon: 'images/user_marker.png'
                                 });
                                 //zoom on the user marker initially
