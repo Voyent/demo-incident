@@ -80,7 +80,7 @@
             },
 
             notificationReceived:function(e) {
-                var payload = JSON.parse(event.detail.notification.payload);
+                var payload = JSON.parse(e.detail.notification.payload);
                 var instanceKey = payload.trackerId+'-'+payload.zoneNamespace;
 
                 if (!this.trackerInstances[instanceKey]) {
