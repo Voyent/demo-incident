@@ -1,6 +1,6 @@
-# Voyent Admin Console
+# Voyent Incident Demo
 
-# This container is based on our Ember foundational image.  It then copies over
+# This container is based on our Polymer Base image.  It then copies over
 # and builds the app and sets it to be served via Nginx.
 
 # The name:version of the Docker image to use.  Must be the first non-comment.
