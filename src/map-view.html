@@ -128,7 +128,8 @@
                     circle = new google.maps.Circle({
                         'map': this.map,
                         'radius': zones[i].properties.googleMaps.radius,
-                        'fillColor': zones[i].properties.Color,
+                        'fillColor': '#' + zones[i].properties.Color,
+                        'fillOpacity':zones[i].properties.Opacity,
                         'zIndex': zones[i].properties.googleMaps.zIndex,
                         'editable': false
                     });
