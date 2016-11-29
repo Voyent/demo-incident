@@ -31,8 +31,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/iron-icons/communication-icons.html">
 <link rel="import" href="../bower_components/iron-icons/maps-icons.html">
-<link rel="import" href="../bower_components/voyent-web-components/common/imports/voyent-xio.html">
-<link rel="import" href="../bower_components/voyent.notify.js/voyent.notify.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-auth-provider/voyent-auth-provider.html">
 <link rel="import" href="../bower_components/voyent-web-components/voyent-login-paper-card/voyent-login-paper-card.html">
 
@@ -178,6 +176,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       .errorToast{
         background-color: #C70000;
       }
+      .hidden-phone, .headerLink {
+          text-decoration: none;
+      }
       @media all and (min-width: 0) and (max-width: 320px) and (orientation: portrait) {
         .hidden-phone {
           display: none;
@@ -244,9 +245,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <app-toolbar class="noShadow">System Setup</app-toolbar>
           <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
             <template is="dom-if" if="{{isAdmin}}">
-              <a name="home" href="#/">
-                <iron-icon icon="home"></iron-icon>
-                <span>Home</span>
+              <a name="dashboard" href="#/dashboard" title="Simulate incident movement">
+                <iron-icon icon="important-devices"></iron-icon>
+                <span>Dashboard</span>
+              </a>
+              <a name="incident" href="#/incident" title="Manage incident and message templates">
+                <iron-icon icon="maps:edit-location"></iron-icon>
+                <span>Templates</span>
               </a>
               <a name="notifications" href="#/notifications" title="View the queue of notifications">
                 <iron-icon icon="announcement"></iron-icon>
@@ -257,14 +262,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <span>Notifications <span style="font-size: 12px; font-weight: normal;">({{_notificationCount}})</span></span>
                 </template>
               </a>
-              <a name="incident" href="#/incident" title="Manage incidents">
-                <iron-icon icon="maps:edit-location"></iron-icon>
-                <span>Incidents</span>
-              </a>
-              <a name="dashboard" href="#/dashboard" title="Simulate incident movement">
-                <iron-icon icon="important-devices"></iron-icon>
-                <span>Dashboard</span>
-              </a>
+              
+              <hr/>
+              <app-toolbar class="noShadow">Analytics & Debug</app-toolbar>
               <a name="actions" href="#/actions" title="Use the action editor to setup powerful application logic">
                 <iron-icon icon="track-changes"></iron-icon>
                 <span>Actions</span>
@@ -291,8 +291,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- Main content -->
         <app-header-layout has-scrolling-region>
-          <app-header condenses reveals effects="waterfall">
-            <app-toolbar id="mainHeader">
+          <app-header fixed condenses effects="waterfall">
+            <app-toolbar id="mainHeader" sticky>
                 <template is="dom-if" if="{{!isClient}}">
                     <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
                 </template>
@@ -399,7 +399,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this._smsSelected = voyent.xio.push.smsRegistered();
         this._emailSelected = voyent.xio.push.emailRegistered();
 
+        //manually load notifications saved in the queue here since voyent.notify.js will fire
+        //queue events onload and we don't listen for those events until after onload fires
+        this.set('_notifications',voyent.notify.queue);
+        this.set('_notificationCount', voyent.notify.getNotificationCount());
+
         this._setupListeners();
+        this._setupVoyentNotifyConfig();
       },
       properties: {
         page: {
@@ -481,10 +487,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       _handleLogout: function() {
+        // Auth logout, reset some variables
         this.page = this.isAdmin ? (this.isDashboard ? 'dashboard' : 'home') : 'map';
-        window.location.hash = '';
         this.$$('#loginCard').password = '';
         this.$$('#authProvider').logout();
+        
+        // Workaround...we keep the state of our flag to prevent flicker in the page
+        // Otherwise the view will switch to the login card, then immediately reload from the code below
+        // This boolean will be reset on page reload anyway, as it is freshly pulled from auth provider
+        // Which means we will return to false properly in the "ready" of this view
+        this._isLoggedIn = true;
+        
+        // Refresh the page
+        window.location.hash = '';
+        location.reload();
       },
       _toggleSMS: function() {
         if (this._smsSelected) {
@@ -650,10 +666,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           _this._showInfoToast(e.detail);
         });
 
-        document.addEventListener('voyentNotifyInitialized',function(e) {
-          e.detail.config.autoSelectNotification = 'newest';
-        });
-
         document.addEventListener('notificationClicked',function(e) {
           //prevent the default behaviour of redirecting to URL
           e.preventDefault();
@@ -698,6 +710,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           console.log('app received event voyent-session-disconnected', e);
           voyent.xio.push.disconnect();
         });
+      },
+
+      _setupVoyentNotifyConfig: function() {
+          voyent.notify.config.autoSelectNotification = 'newest';
+          if (!this.isAdmin) {
+              voyent.notify.config.native.enabled = false;
+              voyent.notify.config.toast.hideAfterMs = -1;
+              voyent.notify.config.toast.stackLimit = 1;
+              voyent.notify.config.toast.overwriteOld = true;
+          }
       }
     });
   </script>

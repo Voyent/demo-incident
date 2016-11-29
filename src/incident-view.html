@@ -17,7 +17,7 @@
             }
             .incidentTabs {
                 font-weight:bold;
-                width:210px;
+                min-width:210px;
             }
             .incidentTabs paper-tab {
                 background-color:white;
@@ -88,6 +88,9 @@
                                                 <paper-tab name="http://dev.voyent.cloud/demos/incident/images/lightning_marker_inverted.png"><img alt="Lightning" title="Lightning" src="../images/lightning_marker.png"></paper-tab>
                                                 <paper-tab name="http://dev.voyent.cloud/demos/incident/images/tornado_marker_inverted.png"><img alt="Tornado" title="Tornado" src="../images/tornado_marker.png"></paper-tab>
                                                 <paper-tab name="http://dev.voyent.cloud/demos/incident/images/hurricane_marker_inverted.png"><img alt="Hurricane" title="Hurricane" src="../images/hurricane_marker.png"></paper-tab>
+                                                <paper-tab name="http://dev.voyent.cloud/demos/incident/images/gas_marker_inverted.png"><img alt="Gas Leak" title="Gas Leak" src="../images/gas_marker.png"></paper-tab>
+                                                <paper-tab name="http://dev.voyent.cloud/demos/incident/images/shooter_marker_inverted.png"><img alt="Active Shooter" title="Active Shooter" src="../images/shooter_marker.png"></paper-tab>
+                                                <paper-tab name="http://dev.voyent.cloud/demos/incident/images/traffic_marker_inverted.png"><img alt="Traffic" title="Traffic" src="../images/traffic_marker.png"></paper-tab>
                                             </paper-tabs>
                                         </div>
                                     </template>
@@ -227,9 +230,11 @@
                 }
                 
                 // Ensure increase and decrease have the selected icon applied to their data
+                // Also make sure a URL is present for each
                 for (var att in this.availableAttitudes) {
                     if (this.trackerData[this.tracker][this.zone].hasOwnProperty(this.availableAttitudes[att])) {
                         this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]].icon = this.selectedIcon;
+                        this.trackerData[this.tracker][this.zone][this.availableAttitudes[att]].url = "http://dev.voyent.cloud/demos/incident/client.html";
                     }
                 }
                 
@@ -384,7 +389,9 @@
                     //the icon has actually changed for this tracker before continuing
                     //all templates should have the same icon so just select the first one
                     var firstZone = Object.keys(this.trackerData[this.tracker])[0];
-                    if (this.trackerData[this.tracker][firstZone].hasOwnProperty('global') && this.selectedIcon === this.trackerData[this.tracker][firstZone].global.icon) {
+                    var keys = Object.keys(this.trackerData[this.tracker][firstZone]);
+                    if (keys.length &&
+                        this.selectedIcon === this.trackerData[this.tracker][firstZone][keys[0]].icon) {
                         return; //icon hasn't changed
                     }
                     var _this = this;

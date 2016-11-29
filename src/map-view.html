@@ -32,7 +32,7 @@
                 },
                 duration: { //how long to move after receiving a tracker move notification (minutes)
                     type: Number,
-                    value: 1,
+                    value: 0.1666666667, //10 seconds
                     readonly: true
                 }
             },
@@ -53,7 +53,16 @@
                 window.initializeLocationsMap = function () {
                     _this.map = new google.maps.Map(_this.$.map, {
                         zoom: 4,
-                        center: {lat: 0, lng: 0}
+                        center: {lat: 0, lng: 0},
+                        streetViewControl: false,
+                        mapTypeControlOptions: {
+                            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                            position: google.maps.ControlPosition.RIGHT_TOP
+                        },
+                        zoomControlOptions: {
+                            style: google.maps.ZoomControlStyle.LARGE,
+                            position: google.maps.ControlPosition.LEFT_CENTER
+                        }
                     });
                     _this.bounds = new google.maps.LatLngBounds();
                     _this._initialize();
@@ -71,7 +80,7 @@
             },
 
             notificationReceived:function(e) {
-                var payload = JSON.parse(event.detail.notification.payload);
+                var payload = JSON.parse(e.detail.notification.payload);
                 var instanceKey = payload.trackerId+'-'+payload.zoneNamespace;
 
                 if (!this.trackerInstances[instanceKey]) {
@@ -82,8 +91,27 @@
                     clearInterval(this.trackerInstances[instanceKey].interval);
                     //update user location as well in case it's changed
                     this._getLastUserLocation();
+                    //just move the tracker position since the location update was manual
+                    if (payload.updateType === 'manual') {
+                        this.trackerInstances[instanceKey].marker.setPosition(new google.maps.LatLng(payload.location[1],payload.location[0]));
+                        //reset map bounds for each manual movement
+                        this.bounds = new google.maps.LatLngBounds();
+                        for (var i=0; i<this.trackerInstances[instanceKey].zones.length; i++) {
+                            this.bounds.union(this.trackerInstances[instanceKey].zones[i].getBounds());
+                        }
+                        //include user marker in bounds
+                        if (this.userMarker) {
+                            this.bounds.extend(this.userMarker.getPosition());
+                        }
+                        //update bounds
+                        this.map.fitBounds(this.bounds);
+                        this.map.panToBounds(this.bounds);
+                    }
                 }
-                this._moveTracker(payload);
+                //only start movement if the location update was triggered via a simulation
+                if (payload.updateType === 'simulated') {
+                    this._moveTracker(payload);
+                }
             },
 
             _moveTracker: function(payload) {
@@ -97,7 +125,7 @@
                 //a new one when receiving the next notification
                 this.trackerInstances[instanceKey].interval = setInterval(function() {
                     //move the tracker
-                    _this._trackerMoved(instanceKey,path[i]); //update the zone positions
+                    _this.trackerInstances[instanceKey].marker.setPosition(path[i]);
                     //check if it's time to stop movement
                     if (i+1 == path.length) {
                         clearInterval(_this.trackerInstances[instanceKey].interval);
@@ -133,51 +161,44 @@
                         'zIndex': zones[i].properties.googleMaps.zIndex,
                         'editable': false
                     });
+                    //bind the marker position to the zone centers so when we update the position of the marker the zones follow
+                    circle.bindTo('center', marker, 'position');
                     //associate the zone with the tracker so we can sync them on movement
                     this.trackerInstances[trackerId+'-'+zoneNamespace].zones.push(circle);
-                }
 
-                //set the bounds around this newly dropped tracker
-                this._trackerMoved(trackerId+'-'+zoneNamespace,marker.getPosition());
-            },
-
-            _trackerMoved: function(instanceKey,latLng) {
-                var marker = this.trackerInstances[instanceKey].marker;
-                marker.setPosition(latLng); //update the marker position
-                //update the center point of associated zones
-                var zones = this.trackerInstances[instanceKey].zones;
-                for (var i=0; i<zones.length; i++) {
-                    zones[i].setCenter(latLng);
+                    //include the zones in the bounds when first drawing the tracker
+                    this.bounds.union(circle.getBounds());
                 }
+                //update bounds
+                this.map.fitBounds(this.bounds);
+                this.map.panToBounds(this.bounds);
             },
 
             _generatePath: function(distance,bearing,location) {
                 var _this = this;
-                var path = [];
+                var path = []; //array of latLng objects containing all coordinates for the path
                 var coordDistance = 2; //distance between each coordinate, in meters
                 var numCoords = distance / coordDistance; //the number of coordinates needed to cover the path distance
 
                 var lat1 = this._toRadians(location[1]);
                 var lng1 = this._toRadians(location[0]);
-                bearing = _this._toRadians(bearing);
-                addCoordinates(lat1,lng1);
-                return path;
 
                 //generate coordinates 2 meters apart until we reach the number of coordinates that we need
-                function addCoordinates(lat1, lng1) {
-                    var eRadius = 6371000; //earth's mean radius in meters
-
-                    var lat2 = Math.asin(Math.sin(lat1)*Math.cos(coordDistance/eRadius) +
-                               Math.cos(lat1)*Math.sin(coordDistance/eRadius)*Math.cos(bearing));
-                    var lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(coordDistance/eRadius)*Math.cos(lat1),
-                               Math.cos(coordDistance/eRadius)-Math.sin(lat1)*Math.sin(lat2));
+                var lat2, lng2;
+                bearing = _this._toRadians(bearing);
+                var eRadius = 6371000; //earth's mean radius in meters
+                for (var i=0; i<numCoords; i++) {
+                    lat2 = Math.asin(Math.sin(lat1)*Math.cos(coordDistance/eRadius) +
+                        Math.cos(lat1)*Math.sin(coordDistance/eRadius)*Math.cos(bearing));
+                    lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(coordDistance/eRadius)*Math.cos(lat1),
+                            Math.cos(coordDistance/eRadius)-Math.sin(lat1)*Math.sin(lat2));
 
                     path.push(new google.maps.LatLng(_this._toDegrees(lat2),_this._toDegrees(lng2)));
 
-                    if (path.length < numCoords) {
-                        addCoordinates(lat2, lng2);
-                    }
+                    lat1 = lat2;
+                    lng1 = lng2;
                 }
+                return path;
             },
 
             _toRadians: function(degrees) {
@@ -224,33 +245,46 @@
                     if (!this.trackers.hasOwnProperty(tracker)) {
                         continue;
                     }
-                    if (!this.trackers[tracker].properties) {
-                        this.trackers[tracker].properties = {};
+                    var thisTracker = this.trackers[tracker];
+                    if (!thisTracker.properties) {
+                        thisTracker.properties = {};
                     }
-                    for (var j=0; j<this.trackers[tracker].zones.features.length; j++) {
-                        zone = this.trackers[tracker].zones.features[j].properties.zoneId;
+                    //if we have a child tracker template we search the parent for the icon instead
+                    if (thisTracker.properties.parentTrackerId) {
+                        thisTracker = this.trackers[thisTracker.properties.parentTrackerId];
+                    }
+                    for (var j=0; j<thisTracker.zones.features.length; j++) {
+                        zone = thisTracker.zones.features[j].properties.zoneId;
                         //set default icon to fallback to in case we don't find an icon
-                        this.trackers[tracker].properties.icon = 'incident_marker.png';
+                        thisTracker.properties.icon = 'incident_marker.png';
                         //search the message templates for an icon and save the first one that is found
-                        if (this.trackerData[this.trackers[tracker]._id] && this.trackerData[this.trackers[tracker]._id][zone]) {
-                            if (this.trackerData[this.trackers[tracker]._id][zone].global &&
-                                    this.trackerData[this.trackers[tracker]._id][zone].global.icon) {
-                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].global.icon);
+                        if (this.trackerData[thisTracker._id] && this.trackerData[thisTracker._id][zone]) {
+                            if (this.trackerData[thisTracker._id][zone].global &&
+                                    this.trackerData[thisTracker._id][zone].global.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[thisTracker._id][zone].global.icon);
                                 break;
                             }
-                            else if (this.trackerData[this.trackers[tracker]._id][zone].increase &&
-                                    this.trackerData[this.trackers[tracker]._id][zone].increase.icon) {
-                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].increase.icon);
+                            else if (this.trackerData[thisTracker._id][zone].increase &&
+                                    this.trackerData[thisTracker._id][zone].increase.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[thisTracker._id][zone].increase.icon);
                                 break;
                             }
-                            else if (this.trackerData[this.trackers[tracker]._id][zone].decrease &&
-                                    this.trackerData[this.trackers[tracker]._id][zone].decrease.icon) {
-                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[this.trackers[tracker]._id][zone].decrease.icon);
+                            else if (this.trackerData[thisTracker._id][zone].decrease &&
+                                    this.trackerData[thisTracker._id][zone].decrease.icon) {
+                                this.trackers[tracker].properties.icon = _parseIconURL(this.trackerData[thisTracker._id][zone].decrease.icon);
                                 break;
                             }
                         }
                     }
                 }
+                //display the last notification in the queue on app load
+                if (voyent.notify.queue.length) {
+                    //re-display the last notification
+                    var lastNotification = voyent.notify.getNewestNotification();
+                    voyent.notify.displayNotification(lastNotification);
+                    this._drawTracker(lastNotification.payload);
+                }
+
                 function _parseIconURL(url) {
                     var parts = url.split('/');
                     var img = parts[parts.length-1];
@@ -269,16 +303,27 @@
                                 _this.userMarker.setPosition(latLng);
                             }
                             else { //create new user marker
+                                var labelText = "?";
+                                if (voyent.io.auth.getLastKnownUsername() && voyent.io.auth.getLastKnownUsername().length > 0) {
+                                    labelText = voyent.io.auth.getLastKnownUsername().substring(0, 1).toLowerCase();
+                                }
+                                
                                 _this.userMarker = new google.maps.Marker({
                                     position: latLng,
                                     map: _this.map,
                                     draggable: false,
+                                    label: {
+                                        text: labelText,
+                                        color: "white",
+                                    },
                                     icon: 'images/user_marker.png'
                                 });
                                 //zoom on the user marker initially
                                 _this.bounds.extend(_this.userMarker.getPosition());
                                 _this.map.fitBounds(_this.bounds);
                                 _this.map.panToBounds(_this.bounds);
+                                //zoom out a bit
+                                _this.map.setZoom(14)
                             }
                             resolve();
                         })['catch'](function(error){

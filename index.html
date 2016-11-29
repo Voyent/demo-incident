@@ -43,6 +43,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <meta name="msapplication-TileColor" content="#3f51b5">
     <meta name="msapplication-tap-highlight" content="no">
 
+    <!-- We need to load voyent.notify.js here so the onload listener it sets up can fire.
+         Additionally, we must load the other libraries since it depends on them. -->
+    <link rel="import" href="bower_components/voyent-web-components/common/imports/voyent-io.html">
+    <link rel="import" href="bower_components/voyent-web-components/common/imports/voyent-xio.html">
+    <link rel="import" href="bower_components/voyent.notify.js/voyent.notify.html">
+
     <script>
         // Setup Polymer options
         window.Polymer = {
@@ -106,7 +112,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     
     <style is="custom-style" type="text/css">
         :root {
-            --override-primary-color: #15B058;
+            --override-primary-color: #347DBE;
         }
     </style>
 </head>

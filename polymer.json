@@ -25,6 +25,14 @@
     "admin.html",
     "client.html",
     "dashboard.html",
+    "bower_components/voyent-web-components/common/imports/voyent-io.html",
+    "bower_components/voyent.io.js/lib/voyent.io.js",
+    "bower_components/es6-promise/dist/es6-promise.min.js",
+    "bower_components/voyent-web-components/common/imports/voyent-xio.html",
+    "bower_components/voyent.xio.js/lib/voyent.xio.js",
+    "bower_components/socket.io-client/socket.io.js ",
+    "bower_components/voyent.notify.js/voyent.notify.html",
+    "bower_components/voyent.notify.js/lib/voyent.notify.js",
     "bower_components/voyent-web-components/common/imports/jquery.html",
     "bower_components/jquery/dist/jquery.min.js",
     "bower_components/voyent-web-components/common/imports/jquery-builder.html",
@@ -54,6 +62,9 @@
     "bower_components/voyent-web-components/voyent-location-simulator/images/incident_marker.png",
     "bower_components/voyent-web-components/voyent-location-simulator/images/lightning_marker.png",
     "bower_components/voyent-web-components/voyent-location-simulator/images/tornado_marker.png",
-    "bower_components/voyent-web-components/voyent-location-simulator/images/hurricane_marker.png"
+    "bower_components/voyent-web-components/voyent-location-simulator/images/hurricane_marker.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/gas_marker.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/shooter_marker.png",
+    "bower_components/voyent-web-components/voyent-location-simulator/images/traffic_marker.png"
   ]
 }
