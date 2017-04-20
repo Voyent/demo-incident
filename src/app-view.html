@@ -388,6 +388,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       is: 'app-view',
 
       ready: function() {
+        // Figure out if we already have a host
+        if (voyent.io.auth.getLastKnownHost()) {
+            this._host = voyent.io.auth.getLastKnownHost();
+        }
+        
         this._loginHeading = this.isAdmin ? (this.isDashboard ? 'Dashboard Login' : 'Admin Login') : 'Client Login';
         this._isLoggedIn = voyent.io.auth.isLoggedIn();
         if (this._isLoggedIn) {
@@ -398,7 +403,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this._cloudSelected = voyent.xio.push.cloudPushRegistered();
         this._smsSelected = voyent.xio.push.smsRegistered();
         this._emailSelected = voyent.xio.push.emailRegistered();
-
+        
         //manually load notifications saved in the queue here since voyent.notify.js will fire
         //queue events onload and we don't listen for those events until after onload fires
         this.set('_notifications',voyent.notify.queue);
