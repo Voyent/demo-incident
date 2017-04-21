@@ -444,7 +444,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
         _host: {
           type: String,
-          value: 'dev.voyent.cloud'
+          value: 'latest.voyent.cloud'
         },
         _users: {
           type: Array
@@ -686,7 +686,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         document.addEventListener('beforeQueueUpdated',function(e) {
-          if (!_this.isAdmin && e.detail.notification && e.detail.notification.subject === 'Tracker Moved') {
+          if (!_this.isAdmin && e.detail.notification &&
+              (e.detail.notification.subject === 'Tracker Moved' ||
+              e.detail.notification.subject === 'Tracker Resized')) {
             e.preventDefault();
             if (_this.page === 'map') {
               var routeRef = document.querySelector('map-view');
