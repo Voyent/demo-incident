@@ -89,6 +89,8 @@
                         //Refresh the tracker template list because the tracker instance could be drawn from a new
                         //tracker template. A new tracker template is created after the initial resize of a tracker instance.
                         this._getAllTrackers().then(function() {
+                            //We have to re-process the trackerData to add the icon to the trackers
+                            _this._processTrackerData();
                             //If resizeTracker is true then don't draw since a tracker was resized instead
                             if (!_this._resizeTracker(payload,true)) {
                                 _this._drawTracker(payload);
@@ -125,6 +127,8 @@
                 else { //'Tracker Resized'
                     //update the list of trackers again since at least one has been updated
                     this._getAllTrackers().then(function() {
+                        //We have to re-process the trackerData to add the icon to the trackers
+                        _this._processTrackerData();
                         _this._resizeTracker(payload);
                     });
                 }
