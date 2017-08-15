@@ -388,10 +388,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       is: 'app-view',
 
       ready: function() {
-        // Figure out if we already have a host
-        if (voyent.io.auth.getLastKnownHost()) {
-            this._host = voyent.io.auth.getLastKnownHost();
-        }
+        // Determine the host
+        this._host = this._getDefaultHost();
         
         this._loginHeading = this.isAdmin ? (this.isDashboard ? 'Dashboard Login' : 'Admin Login') : 'Client Login';
         this._isLoggedIn = voyent.io.auth.isLoggedIn();
@@ -443,8 +441,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           value: 'demos'
         },
         _host: {
-          type: String,
-          value: 'latest.voyent.cloud'
+          type: String
         },
         _users: {
           type: Array
@@ -489,6 +486,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       _isEqual: function(a,b) {
         return a === b;
+      },
+
+      _getDefaultHost: function() {
+        //If you want to force a host, toggle the following boolean:
+        var override = false;
+ 
+        if (override) {
+          var overrideHost = 'latest.voyent.cloud';
+          voyent.$.setSessionStorageItem(btoa("voyentHost"), btoa(overrideHost));
+          return overrideHost;
+        }
+ 
+        if (voyent.io.auth.getLastKnownHost()) {
+          return voyent.io.auth.getLastKnownHost();
+        }
+        else {
+          return window.location.hostname;
+        }
       },
 
       _handleLogout: function() {
